@@ -1,6 +1,6 @@
 /**
  * @file letimer.c
- * @author Keith Graham
+ * @author Will Abrams
  * @date January 12th, 2020
  * @brief Contains all the LETIMER driver functions
  *
@@ -64,7 +64,8 @@ void letimer_pwm_open(LETIMER_TypeDef *letimer, APP_LETIMER_PWM_TypeDef *app_let
 	LETIMER_Init_TypeDef letimer_pwm_values;
 
 	/*  Enable the routed clock to the LETIMER0 peripheral */
-	CMU_ClockEnable(cmuClock_LETIMER0, true);
+	if (letimer == LETIMER0)
+		CMU_ClockEnable(cmuClock_LETIMER0, true);
 
 	/* Use EFM_ASSERT statements to verify whether the LETIMER clock tree is properly
 	 * configured and enabled
@@ -98,6 +99,7 @@ void letimer_pwm_open(LETIMER_TypeDef *letimer, APP_LETIMER_PWM_TypeDef *app_let
 	 * Use the values from app_letimer_struct input argument for ROUTELOC0 and ROUTEPEN enable
 	 */
 	letimer -> REP0 = 7; // any nonzero
+	letimer -> REP1 = 7; // any nonzero
 	letimer -> ROUTELOC0 = app_letimer_struct -> out_pin_route0 | app_letimer_struct -> out_pin_route1;
 	letimer -> ROUTEPEN = (app_letimer_struct -> out_pin_0_en) | (app_letimer_struct -> out_pin_1_en << 1);
 	while (letimer -> SYNCBUSY);
