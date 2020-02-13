@@ -3,3 +3,5 @@
 outgoing/
 WA_*/*
 !WA_*/src/
+!WA_*/emlib/
+!WA_*/CMSIS/
