@@ -1,12 +1,9 @@
 //***********************************************************************************
 // Include files
 //***********************************************************************************
-#ifndef SCHEDULER_GUARD_H
-#define	SCHEDULER_GUARD_H
-
-#include <stdint.h>
-#include "em_assert.h"
-
+#include "em_cmu.h"
+#include "cmu.h"
+#include "gpio.h"
 
 //***********************************************************************************
 // defined files
@@ -21,9 +18,5 @@
 //***********************************************************************************
 // function prototypes
 //***********************************************************************************
-void scheduler_open(void);
-void add_scheduled_event(uint32_t event);
-void remove_scheduled_event(uint32_t event);
-uint32_t get_scheduled_events(void);
-
-#endif
+void app_peripheral_setup(void);
+void app_letimer0_open(void);

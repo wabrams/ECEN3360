@@ -1,20 +1,21 @@
+/*
+ * letimer.c
+ *
+ *  Created on: May 13, 2019
+ *      Author: kgraham
+ */
+
+
 //***********************************************************************************
 // Include files
 //***********************************************************************************
-#include "em_gpio.h"
+#include "app.h"
+
 
 //***********************************************************************************
 // defined files
 //***********************************************************************************
 
-// LED0 pin is
-#define	LED0_port		gpioPortF
-#define LED0_pin		04u
-#define LED0_default	false 	// off
-// LED1 pin is
-#define LED1_port		gpioPortF
-#define LED1_pin		05u
-#define LED1_default	false	// off
 
 //***********************************************************************************
 // global variables
@@ -22,7 +23,15 @@
 
 
 //***********************************************************************************
-// function prototypes
+// function
 //***********************************************************************************
-void gpio_open(void);
 
+void app_peripheral_setup(void)
+{
+	cmu_open();
+	gpio_open();
+}
+
+void app_letimer0_open(void){
+
+}
