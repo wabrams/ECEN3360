@@ -26,6 +26,7 @@ File -> Import -> Existing Project into Workspace -> Archive File
 These are indexed with version numbers:
 * v1.x indicates Lab 1
 * v2.x indicates Lab 2
+
 Normally, x = 0, but occasionally corrections were made after labs were submitted, in which case x > 0.
 
 ## Lab Breakdowns
