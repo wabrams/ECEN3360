@@ -1,0 +1,5 @@
+# ignore extra folders
+.metadata/
+outgoing/
+WA_*/*
+!WA_*/src/
