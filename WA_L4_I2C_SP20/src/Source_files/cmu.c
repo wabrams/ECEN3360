@@ -36,7 +36,6 @@
 void cmu_open(void)
 {
 	CMU_ClockEnable(cmuClock_HFPER, true);
-
 	// By default, LFRCO is enabled, disable the LFRCO oscillator
 	CMU_OscillatorEnable(cmuOsc_LFRCO, false, false);	// using LFXO or ULFRCO
 
