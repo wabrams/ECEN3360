@@ -11,18 +11,18 @@
 
 static unsigned int event_scheduled;
 
-/******************************************************************************
+/**
  * @brief
  *	Initializes the scheduler
  * @details
  *	Sets event_scheduled to 0 (thus clearing any event bits)
- ******************************************************************************/
+ **/
 void scheduler_open(void)
 {
 	event_scheduled = 0;
 }
 
-/******************************************************************************
+/**
  * @brief
  *	Adds event into the scheduler
  * @details
@@ -31,7 +31,7 @@ void scheduler_open(void)
  *	Temporarily disables Interrupts, to prevent nested interrupts (keep things atomic)
  * @param[in] event
  *	The event to be set
- ******************************************************************************/
+ **/
 void add_scheduled_event(uint32_t event)
 {
 	__disable_irq();
@@ -39,7 +39,7 @@ void add_scheduled_event(uint32_t event)
 	__enable_irq();
 }
 
-/******************************************************************************
+/**
  * @brief
  *	Removes event from the scheduler
  * @details
@@ -48,7 +48,7 @@ void add_scheduled_event(uint32_t event)
  *	Temporarily disables Interrupts, to prevent nested interrupts (keep things atomic)
  * @param[in] event
  *	The event to be set
- ******************************************************************************/
+ **/
 void remove_scheduled_event(uint32_t event)
 {
 	__disable_irq();
@@ -56,7 +56,7 @@ void remove_scheduled_event(uint32_t event)
 	__enable_irq();
 }
 
-/******************************************************************************
+/**
  * @brief
  *	Returns scheduled events
  * @details
@@ -64,7 +64,7 @@ void remove_scheduled_event(uint32_t event)
  * 	remember, each bit corresponds to a different event
  * @returns
  *	event_scheduled, the integer keeping track of our current events
- ******************************************************************************/
+ **/
 uint32_t get_scheduled_events(void)
 {
 	return event_scheduled;

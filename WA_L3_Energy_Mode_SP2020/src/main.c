@@ -1,4 +1,4 @@
-/***************************************************************************//**
+/**
  * @file main.c
  * @brief Energy Mode Demo for PG12
  *******************************************************************************
@@ -13,7 +13,7 @@
  * software is distributed to you in Source Code format and is governed by the
  * sections of the MSLA applicable to Source Code.
  *
- ******************************************************************************/
+ **/
 
 /* System include statements */
 #include <stdint.h>

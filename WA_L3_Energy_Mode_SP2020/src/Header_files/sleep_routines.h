@@ -10,12 +10,13 @@
 #include "em_assert.h"
 #include "em_core.h"
 
-#define EM0 0
-#define EM1 1
-#define EM2 2
-#define EM3 3
-#define EM4 4
-#define MAX_ENERGY_MODES 5
+#define EM0 0 /**< Energy Mode 0 - Awake **/
+#define EM1 1 /**< Energy Mode 1 - Sleep **/
+#define EM2 2 /**< Energy Mode 2 - Sleep **/
+#define EM3 3 /**< Energy Mode 3 - Sleep **/
+#define EM4 4 /**< Energy Mode 4 - Hibernation **/
+#define MAX_ENERGY_MODES 5 /**< Total Number of Energy Modes **/
+
 //better implementation:
 //enum energy_modes
 //{

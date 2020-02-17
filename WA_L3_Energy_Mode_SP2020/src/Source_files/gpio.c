@@ -31,14 +31,14 @@
 //***********************************************************************************
 // functions
 //***********************************************************************************
-/******************************************************************************
+/**
  * @brief
  *	Initialization of the GPIO for any required peripherals / components
  * @details
  *	Enables needed pins and sets the drive strength
  * @note
  *	GPIO = General Purpose Input / Output
- ******************************************************************************/
+ **/
 void gpio_open(void)
 {
 

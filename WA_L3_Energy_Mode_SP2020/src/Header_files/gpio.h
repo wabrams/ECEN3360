@@ -10,15 +10,14 @@
 //***********************************************************************************
 // defined files
 //***********************************************************************************
-
-// LED0 pin is
-#define	LED0_port		gpioPortF
-#define LED0_pin		04u
-#define LED0_default	false 	// off
-// LED1 pin is
-#define LED1_port		gpioPortF
-#define LED1_pin		05u
-#define LED1_default	false	// off
+	// LED0
+	#define	LED0_port		gpioPortF	/**< LED0's GPIO Port     **/
+	#define LED0_pin		04u			/**< LED0's GPIO Pin      **/
+	#define LED0_default	false		/**< LED0's Default State **/
+	// LED1
+	#define LED1_port		gpioPortF	/**< LED1's GPIO Port     **/
+	#define LED1_pin		05u			/**< LED1's GPIO Pin      **/
+	#define LED1_default	false		/**< LED1's Default State **/
 
 //***********************************************************************************
 // global variables

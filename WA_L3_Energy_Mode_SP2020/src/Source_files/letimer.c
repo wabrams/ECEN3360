@@ -36,7 +36,7 @@ static uint32_t scheduled_uf_evt;
 // functions
 //***********************************************************************************
 
-/***************************************************************************//**
+/**
  * @brief
  *   Driver to open an set an LETIMER peripheral in PWM mode
  *
@@ -59,7 +59,7 @@ static uint32_t scheduled_uf_evt;
  *   Is the STRUCT that the calling routine will use to set the parameters for PWM
  *   operation
  *
- ******************************************************************************/
+ **/
 void letimer_pwm_open(LETIMER_TypeDef * letimer, APP_LETIMER_PWM_TypeDef *app_letimer_struct)
 {
 	LETIMER_Init_TypeDef letimer_pwm_values;
@@ -121,7 +121,7 @@ void letimer_pwm_open(LETIMER_TypeDef * letimer, APP_LETIMER_PWM_TypeDef *app_le
 		sleep_block_mode(LETIMER_EM);
 }
 
-/***************************************************************************//**
+/**
  * @brief
  *   Used to enable, turn-on, or disable, turn-off, the LETIMER peripheral
  *
@@ -142,7 +142,7 @@ void letimer_pwm_open(LETIMER_TypeDef * letimer, APP_LETIMER_PWM_TypeDef *app_le
  *   true enables the LETIMER to start operation while false disables the
  *   LETIMER
  *
- ******************************************************************************/
+ **/
 void letimer_start(LETIMER_TypeDef * letimer, bool enable)
 {
 	while (letimer -> SYNCBUSY);
@@ -155,7 +155,7 @@ void letimer_start(LETIMER_TypeDef * letimer, bool enable)
 	LETIMER_Enable(letimer, enable);
 	while (letimer -> SYNCBUSY);
 }
-/***************************************************************************//**
+/**
  * @brief
  *	Interrupt Routine for LETIMER0
  *
@@ -164,7 +164,7 @@ void letimer_start(LETIMER_TypeDef * letimer, bool enable)
  *
  * @note
  *	This IRQHandler can only handle COMP0, COMP1, and UF events
- ******************************************************************************/
+ **/
 void LETIMER0_IRQHandler(void)
 {
 	__disable_irq();

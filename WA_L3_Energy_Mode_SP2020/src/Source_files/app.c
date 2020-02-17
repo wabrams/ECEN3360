@@ -31,7 +31,7 @@
 // function
 //***********************************************************************************
 
-/***************************************************************************//**
+/**
  * @brief
  *	Set up the peripherals.
  *
@@ -41,7 +41,7 @@
  * @note
  *	This function does call other app functions, used to open some of the peripherals.
  *
- ******************************************************************************/
+ **/
 void app_peripheral_setup(void)
 {
 	sleep_open();
@@ -52,7 +52,7 @@ void app_peripheral_setup(void)
 }
 
 
-/***************************************************************************//**
+/**
  * @brief
  *	Set up the LETIMER for PWM
  *
@@ -68,7 +68,7 @@ void app_peripheral_setup(void)
  *
  * @param[in] act_period
  *	The period of the on duty cycle (PWM LOW).
- ******************************************************************************/
+ **/
 void app_letimer_pwm_open(float period, float act_period)
 {
 	// Initializing LETIMER0 for PWM operation by creating the
@@ -91,14 +91,14 @@ void app_letimer_pwm_open(float period, float act_period)
 	// aaaaaand open
 	letimer_pwm_open(LETIMER0, &letimer_pwm_struct);
 }
-/******************************************************************************
+/**
  * @brief
  *	Scheduled Event Handler for LETIMER0 UF
  * @details
  *	Tests energy modes EM0, EM1, EM2, and EM3 (and our sleep routines)
  * @note
  *	Does not enter EM4, as the CPU context state would be lost (hibernation vs sleep)
- ******************************************************************************/
+ **/
 void scheduled_letimer0_uf_evt(void)
 {
 	EFM_ASSERT(get_scheduled_events() & LETIMER0_UF_EVT);
@@ -112,32 +112,31 @@ void scheduled_letimer0_uf_evt(void)
 	else
 		sleep_block_mode(EM0);
 }
-/******************************************************************************
+/**
  * @brief
  *	Scheduled Event Handler for LETIMER0 COMP0
  * @details
  *	Removes event from scheduler, asserts false
  * @note
  *	Contains EFM_ASSERT(false), as we shouldn't end up in this method
- ******************************************************************************/
+ **/
 void scheduled_letimer0_comp0_evt(void)
 {
 //	EFM_ASSERT(get_scheduled_events() & LETIMER0_COMP0_EVT);
 	remove_scheduled_event(LETIMER0_COMP0_EVT);
 	EFM_ASSERT(false);
 }
-/******************************************************************************
+/**
  * @brief
  *	Scheduled Event Handler for LETIMER0 COMP1
  * @details
  *	Removes event from scheduler, asserts false
  * @note
  *	Contains EFM_ASSERT(false), as we shouldn't end up in this method
- ******************************************************************************/
+ **/
 void scheduled_letimer0_comp1_evt(void)
 {
 //	EFM_ASSERT(get_scheduled_events() & LETIMER0_COMP1_EVT);
 	remove_scheduled_event(LETIMER0_COMP1_EVT);
 	EFM_ASSERT(false);
 }
-
