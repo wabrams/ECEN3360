@@ -1,6 +1,8 @@
 # ignore extra folders
 .metadata/
 outgoing/
+Doxygen/
+Doxyfile
 WA_*/*
 !WA_*/src/
 !WA_*/emlib/

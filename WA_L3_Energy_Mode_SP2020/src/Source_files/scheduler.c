@@ -59,6 +59,9 @@ void remove_scheduled_event(uint32_t event)
 /******************************************************************************
  * @brief
  *	Returns scheduled events
+ * @details
+ * 	returns event_scheduled as a uint32_t
+ * 	remember, each bit corresponds to a different event
  * @returns
  *	event_scheduled, the integer keeping track of our current events
  ******************************************************************************/

@@ -1,9 +1,6 @@
-/*
- * sleep_routines.h
- *
- *  Created on: Feb 6, 2020
- *      Author: Will
- */
+/**
+ * @file sleep_routines.h
+ **/
 
 #ifndef SLEEP_ROUTINES_H
 #define SLEEP_ROUTINES_H

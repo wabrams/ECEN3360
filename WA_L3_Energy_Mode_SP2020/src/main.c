@@ -1,6 +1,6 @@
 /***************************************************************************//**
- * @file
- * @brief Simple LED Blink Demo for SLSTK3402A
+ * @file main.c
+ * @brief Energy Mode Demo for PG12
  *******************************************************************************
  * # License
  * <b>Copyright 2018 Silicon Laboratories Inc. www.silabs.com</b>
