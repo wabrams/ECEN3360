@@ -25,6 +25,13 @@
 	#define SI7021_SDA_PIN			10
 	#define SI7021_SENSOR_EN_PORT	gpioPortB
 	#define SI7021_SENSOR_EN_PIN	10
+	// I2C ROUTE Options
+	#define	I2C0_RL_SCL				I2C_ROUTELOC0_SCLLOC_LOC15
+	#define	I2C0_RL_SDA				I2C_ROUTELOC0_SDALOC_LOC15
+	#define	I2C1_RL_SCL				I2C_ROUTELOC0_SCLLOC_LOC19
+	#define	I2C1_RL_SDA				I2C_ROUTELOC0_SDALOC_LOC19
+	#define I2C_RPEN_SCL			I2C_ROUTEPEN_SCLPEN
+	#define I2C_RPEN_SDA			I2C_ROUTEPEN_SDAPEN
 
 //***********************************************************************************
 // global variables
