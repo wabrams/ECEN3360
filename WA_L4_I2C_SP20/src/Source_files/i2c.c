@@ -1,6 +1,8 @@
 #include "em_cmu.h"
 #include "i2c.h"
 
+static I2C_PAYLOAD_STRUCT i2c_payload_s;
+
 void i2c_open(I2C_TypeDef * i2c, I2C_OPEN_STRUCT * i2c_open_s, I2C_IO_STRUCT * i2c_io_s)
 {
 	if (i2c == I2C0)
@@ -29,7 +31,7 @@ void i2c_open(I2C_TypeDef * i2c, I2C_OPEN_STRUCT * i2c_open_s, I2C_IO_STRUCT * i
 	I2C_Init(i2c, &i2c_init);
 
 	i2c -> ROUTELOC0 = i2c_open_s -> rloc_scl | i2c_open_s -> rloc_sda;
-	i2c -> ROUTEPEN = i2c_open_s -> rloc_scl_en | i2c_open_s -> rloc_sda_en;
+	i2c -> ROUTEPEN  = i2c_open_s -> rloc_scl_en | i2c_open_s -> rloc_sda_en;
 	i2c_bus_reset(i2c, i2c_io_s);
 
 	i2c -> IEN = I2C_IEN_ACK | I2C_IEN_NACK | I2C_IEN_RXDATAV | I2C_IEN_MSTOP;
@@ -60,6 +62,21 @@ void i2c_bus_reset(I2C_TypeDef * i2c, I2C_IO_STRUCT * i2c_io_s)
 	i2c -> CMD = I2C_CMD_ABORT;		// Send the I2C Abort Command
 }
 
+static void i2c_ack(I2C_TypeDef * i2c)
+{
+	EFM_ASSERT(false);
+}
+
+static void i2c_nack(I2C_TypeDef * i2c)
+{
+
+}
+
+static void i2c_rxdatav(I2C_TypeDef * i2c)
+{
+
+}
+
 void I2C0_IRQHandler(void)
 {
 	__disable_irq();
@@ -69,15 +86,15 @@ void I2C0_IRQHandler(void)
 
 	if (iflags & I2C_IF_ACK)
 	{
-
+		i2c_ack(I2C0);
 	}
 	if (iflags & I2C_IF_NACK)
 	{
-
+		i2c_nack(I2C0);
 	}
 	if (iflags & I2C_IF_RXDATAV)
 	{
-
+		i2c_rxdatav(I2C0);
 	}
 	if (iflags & I2C_IF_MSTOP)
 	{
@@ -88,5 +105,10 @@ void I2C0_IRQHandler(void)
 
 void I2C1_IRQHandler(void)
 {
+	uint32_t iflags = I2C0 -> IF;
+	I2C0 -> IFC = iflags;
+
 	//TODO: copy I2C0_IRQHandler code here
+
+	__enable_irq();
 }

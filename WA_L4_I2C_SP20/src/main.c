@@ -62,7 +62,6 @@ int main(void)
 
   /* Call to start the LETIMER operation */
   letimer_start(LETIMER0, true);
-
   /* Infinite blink loop */
   while (1)
   {

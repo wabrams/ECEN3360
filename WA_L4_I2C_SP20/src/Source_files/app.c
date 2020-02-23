@@ -15,7 +15,7 @@
 #include "letimer.h"
 #include "scheduler.h"
 #include "sleep_routines.h"
-
+#include "si7021.h"
 
 //***********************************************************************************
 // defined files
@@ -49,6 +49,7 @@ void app_peripheral_setup(void)
 	cmu_open();
 	gpio_open();
 	app_letimer_pwm_open(PWM_PER, PWM_ACT_PER);
+	si7021_i2c_open();
 }
 
 
