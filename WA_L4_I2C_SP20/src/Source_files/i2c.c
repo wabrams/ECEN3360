@@ -1,5 +1,11 @@
+/**
+ * @file i2c.c
+ * @author William Abrams
+**/
+
 #include "em_cmu.h"
 #include "i2c.h"
+#include "si7021.h"
 
 static I2C_PAYLOAD_STRUCT i2c_payload_s;
 
@@ -60,16 +66,70 @@ void i2c_bus_reset(I2C_TypeDef * i2c, I2C_IO_STRUCT * i2c_io_s)
 	}
 
 	i2c -> CMD = I2C_CMD_ABORT;		// Send the I2C Abort Command
+
+	i2c_payload_s.i2c_state = I2C_STATE_IDLE;
+//	i2c_payload_s.rx_bytes = 0;
 }
 
 static void i2c_ack(I2C_TypeDef * i2c)
 {
-	EFM_ASSERT(false);
+	switch(i2c_payload_s.i2c_state)
+	{
+		case I2C_STATE_START:
+			//device is open and ready for measurement
+			i2c_payload_s.i2c_state = I2C_STATE_CMDW;
+			i2c -> TXDATA = SI7021_TEMP_NO_HOLD;
+			break;
+		case I2C_STATE_CMDW:
+			//device measurement command received, ask if ready to tx
+			i2c_payload_s.i2c_state = I2C_STATE_CMDR;
+			i2c -> CMD = I2C_CMD_START;
+			i2c -> TXDATA = (SI7021_DEV_ADDR << 1) | I2C_DIR_READ;
+			break;
+		case I2C_STATE_CMDR:
+			//device is sending MSByte
+			i2c_payload_s.i2c_state = I2C_STATE_RX_MSB;
+			break;
+		case I2C_STATE_RX_MSB:
+			//device is sending LSByte
+			i2c_payload_s.i2c_state = I2C_STATE_RX_LSB;
+			break;
+		case I2C_STATE_RX_LSB:
+			//we shouldn't be here
+			break;
+		case I2C_STATE_DONE:
+			//set to idle, unblock sleep
+			break;
+
+	}
 }
 
 static void i2c_nack(I2C_TypeDef * i2c)
 {
-
+	switch(i2c_payload_s.i2c_state)
+	{
+		case I2C_STATE_START:
+			//major fatal error
+			EFM_ASSERT(false);
+			break;
+		case I2C_STATE_CMDW:
+			//device could be busy, send again
+			i2c -> TXDATA = SI7021_TEMP_NO_HOLD;
+			break;
+		case I2C_STATE_CMDR:
+			//conversion not complete, ask again
+			i2c -> CMD = I2C_CMD_START;
+			i2c -> TXDATA = (SI7021_DEV_ADDR << 1) | I2C_DIR_READ;
+			break;
+		case I2C_STATE_RX_MSB:
+			//critical error
+			break;
+		case I2C_STATE_RX_LSB:
+			//critical error
+			break;
+		case I2C_STATE_DONE:
+			break;
+	}
 }
 
 static void i2c_rxdatav(I2C_TypeDef * i2c)
@@ -81,7 +141,7 @@ void I2C0_IRQHandler(void)
 {
 	__disable_irq();
 
-	uint32_t iflags = I2C0 -> IF;
+	uint32_t iflags = I2C0 -> IF & I2C0 -> IEN;
 	I2C0 -> IFC = iflags;
 
 	if (iflags & I2C_IF_ACK)
@@ -97,7 +157,7 @@ void I2C0_IRQHandler(void)
 		i2c_rxdatav(I2C0);
 	}
 	if (iflags & I2C_IF_MSTOP)
-	{
+	{	//we can be sneaky and send this to the ack handler if we so desire
 
 	}
 	__enable_irq();
@@ -105,10 +165,10 @@ void I2C0_IRQHandler(void)
 
 void I2C1_IRQHandler(void)
 {
-	uint32_t iflags = I2C0 -> IF;
+	uint32_t iflags = I2C1 -> IF & I2C1 -> IEN;
 	I2C0 -> IFC = iflags;
 
-	//TODO: copy I2C0_IRQHandler code here
+	//TODO: copy I2C0_IRQHandler code here, replace I2C0 with I2C1
 
 	__enable_irq();
 }
