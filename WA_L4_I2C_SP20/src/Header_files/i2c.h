@@ -13,6 +13,8 @@
 	//TODO: verify correct
 	#define I2C_DIR_WRITE	0
 	#define I2C_DIR_READ	1
+	#define GENERAL_BYTE_SHIFT 8
+	#define GENERAL_BYTE_MASK 255 //0xFF = 0b 1111 1111
 //enums
 	/**
 	 * I2C State Machine Enumeration
@@ -55,6 +57,7 @@
 	typedef struct
 	{
 		int_fast8_t	i2c_state;				/**< I2C's state machine **/
+		uint32_t rx_buffer;					/**< I2C's RX data shift buffer **/
 //		int_fast8_t rx_bytes;				/**< I2C's bytes received tracker (helps with state machine) **/
 //		int_fast8_t rx_max;					/**< I2C's max bytes to receive **/
 	//	varType 	varName;		/**< doxygen comment **/

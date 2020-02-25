@@ -6,6 +6,7 @@
 #include "em_cmu.h"
 #include "i2c.h"
 #include "si7021.h"
+#include "sleep_routines.h"
 
 static I2C_PAYLOAD_STRUCT i2c_payload_s;
 
@@ -69,6 +70,7 @@ void i2c_bus_reset(I2C_TypeDef * i2c, I2C_IO_STRUCT * i2c_io_s)
 
 	i2c_payload_s.i2c_state = I2C_STATE_IDLE;
 //	i2c_payload_s.rx_bytes = 0;
+	i2c_payload_s.rx_buffer = 0;
 }
 
 static void i2c_ack(I2C_TypeDef * i2c)
@@ -123,9 +125,11 @@ static void i2c_nack(I2C_TypeDef * i2c)
 			break;
 		case I2C_STATE_RX_MSB:
 			//critical error
+			EFM_ASSERT(false);
 			break;
 		case I2C_STATE_RX_LSB:
 			//critical error
+			EFM_ASSERT(false);
 			break;
 		case I2C_STATE_DONE:
 			break;
@@ -134,7 +138,25 @@ static void i2c_nack(I2C_TypeDef * i2c)
 
 static void i2c_rxdatav(I2C_TypeDef * i2c)
 {
-
+	switch(i2c_payload_s.i2c_state)
+	{
+		case I2C_STATE_RX_MSB:
+			i2c_payload_s.rx_buffer <<= GENERAL_BYTE_SHIFT;
+			i2c_payload_s.rx_buffer |= GENERAL_BYTE_MASK & i2c -> RXDATA;
+			i2c_payload_s.i2c_state = I2C_STATE_RX_LSB;
+			i2c -> CMD = I2C_CMD_ACK;
+			break;
+		case I2C_STATE_RX_LSB:
+			i2c_payload_s.rx_buffer <<= GENERAL_BYTE_SHIFT;
+			i2c_payload_s.rx_buffer |= GENERAL_BYTE_MASK & i2c -> RXDATA;
+			i2c_payload_s.i2c_state = I2C_STATE_RX_LSB;
+			i2c_payload_s.i2c_state = I2C_STATE_DONE;
+			i2c -> CMD = I2C_CMD_NACK | I2C_CMD_STOP;
+			break;
+		//TODO: shouldn't be here...
+//		default:
+//			EFM_ASSERT(false);
+	}
 }
 
 void I2C0_IRQHandler(void)
