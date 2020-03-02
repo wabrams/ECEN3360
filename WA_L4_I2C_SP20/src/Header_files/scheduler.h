@@ -29,4 +29,4 @@ void add_scheduled_event(uint32_t event);
 void remove_scheduled_event(uint32_t event);
 uint32_t get_scheduled_events(void);
 
-#endif
+#endif /* SCHEDULER_GUARD_H */

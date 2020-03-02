@@ -105,13 +105,14 @@ void scheduled_letimer0_uf_evt(void)
 	EFM_ASSERT(get_scheduled_events() & LETIMER0_UF_EVT);
 	remove_scheduled_event(LETIMER0_UF_EVT);
 
-	uint32_t cen = current_block_energy_mode();
-	sleep_unblock_mode(cen);
-
-	if (cen < EM4)
-		sleep_block_mode(cen + 1);
-	else
-		sleep_block_mode(EM0);
+	si7021_i2c_start();
+//	uint32_t cen = current_block_energy_mode();
+//	sleep_unblock_mode(cen);
+//
+//	if (cen < EM4)
+//		sleep_block_mode(cen + 1);
+//	else
+//		sleep_block_mode(EM0);
 }
 /**
  * @brief
@@ -140,4 +141,21 @@ void scheduled_letimer0_comp1_evt(void)
 //	EFM_ASSERT(get_scheduled_events() & LETIMER0_COMP1_EVT);
 	remove_scheduled_event(LETIMER0_COMP1_EVT);
 	EFM_ASSERT(false);
+}
+/**
+ * @brief
+ * 	Scheduled Event Handler for I2C SI7021
+ * @details
+ * 	Removes event from the scheduler, checks temperature and compares it to TEMP_THRESHOLD
+ **/
+void scheduled_i2c_si7021_evt(void)
+{
+	EFM_ASSERT(get_scheduled_events() & I2C_SI7021_EVT);
+	remove_scheduled_event(I2C_SI7021_EVT);
+
+	float temp = si7021_temp_F();
+	if (temp >= TEMP_THRESHOLD)
+		GPIO_PinOutGet(LED1_port, LED1_pin);
+	else
+		GPIO_PinOutClear(LED1_port, LED1_pin);
 }

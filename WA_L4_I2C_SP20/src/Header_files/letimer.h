@@ -1,6 +1,8 @@
 /**
  * @file letimer.h
  **/
+#ifndef LETIMER_H
+#define LETIMER_H
 
 //***********************************************************************************
 // Include files
@@ -10,12 +12,16 @@
 //***********************************************************************************
 // defined files
 //***********************************************************************************
-#define LETIMER_HZ	1000				// Utilizing ULFRCO oscillator for LETIMERs
-#define	LETIMER_REP_MAGIC_NUMBER 7
-#define LETIMER_EM EM4
+#define LETIMER_HZ	1000				/**< frequency for LETIMER in Hz, set to once every second **/
+#define	LETIMER_REP_MAGIC_NUMBER 7		/**< generic non-zero value used to set REP registers **/
+#define LETIMER_EM EM4					/**< energy block for LETIMER, keeps PG12 out of EM4 **/
 //***********************************************************************************
 // global variables
 //***********************************************************************************
+/**
+ * @brief
+ *  LETIMER PWM Setup Struct
+ */
 typedef struct {
 	bool 			debugRun;			/**< keep the LETIMER running while paused in Debugger **/
 	bool 			enable;				/**< enables LETIMER upon completion of open **/
@@ -39,3 +45,5 @@ typedef struct {
 //***********************************************************************************
 void letimer_pwm_open(LETIMER_TypeDef *letimer, APP_LETIMER_PWM_TypeDef *app_letimer_struct);
 void letimer_start(LETIMER_TypeDef *letimer, bool enable);
+
+#endif /* LETIMER_H */

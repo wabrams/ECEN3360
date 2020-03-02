@@ -9,7 +9,7 @@
 #include "em_emu.h"
 #include "em_assert.h"
 
-static unsigned int event_scheduled;
+static unsigned int event_scheduled;	/**< Scheduler Integer, each bit represents a different event **/
 
 /**
  * @brief

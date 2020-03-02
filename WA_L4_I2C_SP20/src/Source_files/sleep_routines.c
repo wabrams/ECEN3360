@@ -30,7 +30,8 @@
 #include "sleep_routines.h"
 #include <stdbool.h>
 
-static int lowest_energy_mode[MAX_ENERGY_MODES];
+static int lowest_energy_mode[MAX_ENERGY_MODES]; /**< array tracking blocks to sleep modes EM0 - EM4 **/
+
 /**
  * @brief
  *	Initializes the Sleep Manager
