@@ -28,9 +28,9 @@
 //***********************************************************************************
 // private variables
 //***********************************************************************************
-static uint32_t scheduled_comp0_evt;
-static uint32_t scheduled_comp1_evt;
-static uint32_t scheduled_uf_evt;
+static uint32_t scheduled_comp0_evt;	/**< Scheduled Event ID for LETIMER comp0 event     **/
+static uint32_t scheduled_comp1_evt;	/**< Scheduled Event ID for LETIMER comp1 event     **/
+static uint32_t scheduled_uf_evt;		/**< Scheduled Event ID for LETIMER underflow event **/
 
 //***********************************************************************************
 // functions

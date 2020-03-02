@@ -30,7 +30,8 @@
 #include "sleep_routines.h"
 #include <stdbool.h>
 
-static int lowest_energy_mode[MAX_ENERGY_MODES];
+static int lowest_energy_mode[MAX_ENERGY_MODES]; /**< array tracking blocks to sleep modes EM0 - EM4 **/
+
 /**
  * @brief
  *	Initializes the Sleep Manager
@@ -58,8 +59,12 @@ void sleep_open(void)
  **/
 void sleep_block_mode(uint32_t em)
 {
+	__disable_irq();
+
 	lowest_energy_mode[em]++;
 	EFM_ASSERT(lowest_energy_mode[em] < 10);
+
+	__enable_irq();
 }
 /**
  * @brief
@@ -77,8 +82,12 @@ void sleep_block_mode(uint32_t em)
  **/
 void sleep_unblock_mode(uint32_t em)
 {
+	__disable_irq();
+
 	lowest_energy_mode[em]--;
 	EFM_ASSERT(lowest_energy_mode[em] >= 0);
+
+	__enable_irq();
 }
 /**
  * @brief

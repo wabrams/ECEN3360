@@ -35,6 +35,12 @@
 #include "scheduler.h"
 #include "sleep_routines.h"
 
+/**
+ * @brief
+ * 	main function for our application
+ * @details
+ *  opens and starts peripherals, contains scheduler handler
+ **/
 int main(void)
 {
   EMU_DCDCInit_TypeDef dcdcInit = EMU_DCDCINIT_DEFAULT;
@@ -60,7 +66,6 @@ int main(void)
   /* Call application program to open / initialize all required peripheral */
   app_peripheral_setup();
 
-  /* Call to start the LETIMER operation */
   letimer_start(LETIMER0, true);
 
   /* Infinite blink loop */
@@ -78,6 +83,8 @@ int main(void)
 			  scheduled_letimer0_comp0_evt();
 		  if (events & LETIMER0_COMP1_EVT)
 			  scheduled_letimer0_comp1_evt();
+		  if (events & I2C_SI7021_EVT)
+			  scheduled_i2c_si7021_evt();
 	  }
   }
 }
