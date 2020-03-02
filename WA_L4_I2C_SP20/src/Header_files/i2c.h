@@ -21,7 +21,7 @@
 	 * @brief
 	 * I2C State Machine Enumeration
 	 **/
-	enum I2C_STATEMACHINE_ENUM
+	typedef enum
 	{
 		I2C_STATE_IDLE,		/**< Idle state **/
 		I2C_STATE_START,	/**< Send the start command **/
@@ -30,7 +30,7 @@
 		I2C_STATE_RX_MSB,	/**< Receive the most significant byte from the device **/
 		I2C_STATE_RX_LSB,	/**< Receive the least significant byte from the device **/
 		I2C_STATE_DONE		/**< Done reading from the device **/
-	};
+	} i2c_read_state_t;
 //structs
 	/**
 	 * @brief
@@ -67,7 +67,7 @@
 	 **/
 	typedef struct
 	{
-		int_fast8_t	i2c_state;				/**< I2C's state machine **/
+		i2c_read_state_t i2c_state;			/**< I2C's state machine **/
 		I2C_TypeDef * i2c;					/**< I2C's i2c pointer, unused **/
 		uint32_t dev_addr;					/**< Device address value **/
 		uint32_t dev_cmd;					/**< Device register / command **/
