@@ -145,10 +145,6 @@ static void i2c_ack(I2C_TypeDef * i2c)
 			//device is sending MSByte
 			i2c_payload_s -> i2c_state = I2C_STATE_RX_MSB;
 			break;
-		case I2C_STATE_RX_MSB:
-			//device is sending LSByte
-			i2c_payload_s -> i2c_state = I2C_STATE_RX_LSB;
-			break;
 		default:
 			EFM_ASSERT(false);
 			break;
@@ -204,6 +200,7 @@ static void i2c_rxdatav(I2C_TypeDef * i2c)
 			break;
 		default:
 			EFM_ASSERT(false);
+			break
 	}
 }
 

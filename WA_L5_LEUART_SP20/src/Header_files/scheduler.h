@@ -4,8 +4,8 @@
 //***********************************************************************************
 // Include files
 //***********************************************************************************
-#ifndef SCHEDULER_GUARD_H
-#define	SCHEDULER_GUARD_H
+#ifndef SCHEDULER_H
+#define	SCHEDULER_H
 
 #include <stdint.h>
 #include "em_assert.h"
@@ -29,4 +29,4 @@ void add_scheduled_event(uint32_t event);
 void remove_scheduled_event(uint32_t event);
 uint32_t get_scheduled_events(void);
 
-#endif /* SCHEDULER_GUARD_H */
+#endif /* SCHEDULER_H */

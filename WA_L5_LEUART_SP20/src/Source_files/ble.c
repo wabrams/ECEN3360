@@ -78,6 +78,7 @@ bool ble_test(char * mod_name)
 	uint32_t	str_len;
 
 	__disable_irq();
+
 	// How is polling different than using interrupts?
 	// 	ANSWER: it's a busy / wait instead of being trigged by an interrupt
 	// How does interrupts benefit the system for low energy operation?
@@ -85,34 +86,24 @@ bool ble_test(char * mod_name)
 	// How do interrupts benefit the system that has multiple tasks?
 	// 	ANSWER: can work on other things while we wait for an interrupt
 
-	// Replace the break_str "" with the command to break or end a BLE connection
-	// Replace the ok_str "" with the result that will be returned from the BLE
 	char break_str[80] = "AT";
 	char ok_str[80] = "OK";
 
-	// Replace the otput_str "" with the command to change the program name
-	// Replace the result_str "" with the first part of the expected result
 	char output_str[80] = "AT+NAME";
 	char result_str[80] = "OK+Set:";
 
-	// Replace the reset_str "" with the command to reset the module
-	// Replace the reset_result_str "" with the expected BLE module response to the reset command
-	char		reset_str[80] = "AT+RESET";
-	char		reset_result_str[80] = "OK+RESET";
-	char		return_str[80];
+	char reset_str[80] = "AT+RESET";
+	char reset_result_str[80] = "OK+RESET";
+	char return_str[80];
 
-	bool		rx_disabled, rx_en, tx_en;
-	uint32_t	status;
+	bool rx_disabled, rx_en, tx_en;
+	uint32_t status;
 
 	// These are the routines that will build up the entire command and response
 	// of programming the name into the BLE module.  Concatenating the command or
 	// response with the input argument name
 	strcat(output_str, mod_name);
 	strcat(result_str, mod_name);
-
-	// The test routine must not alter the function of the configuration of the
-	// LEUART driver, but requires certain functionality to insure the logical test
-	// of writing and reading to the DSD HM10 module.
 
 	status = leuart_status(HM10_LEUART0);
 	if (status & LEUART_STATUS_RXBLOCK)
@@ -195,7 +186,6 @@ bool ble_test(char * mod_name)
 	if (rx_disabled) leuart_cmd_write(HM10_LEUART0, LEUART_CMD_RXBLOCKEN);
 	if (!tx_en) leuart_cmd_write(HM10_LEUART0, LEUART_CMD_TXDIS);
 	leuart_if_reset(HM10_LEUART0);
-
 
 	__enable_irq();
 

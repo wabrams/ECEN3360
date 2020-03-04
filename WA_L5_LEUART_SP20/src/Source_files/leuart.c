@@ -17,7 +17,21 @@ void leuart_open(LEUART_TypeDef * leuart, LEUART_OPEN_STRUCT * leuart_settings)
 {
 	// Enable LEUART0 Clock
 	CMU_ClockEnable(cmuClock_LEUART0, true);
-
+	// Verify Clock Tree
+	if ((leuart -> STARTFRAME & 0x01) == 0) //LSB not set
+	{
+		leuart -> STARTFRAME |= 0x01;
+		while (leuart -> SYNCBUSY & LEUART_SYNCBUSY_STARTFRAME);
+		EFM_ASSERT(leuart -> STARTFRAME & 0x01);
+		leuart -> STARTFRAME &= ~0x01;
+	}
+	else //LSB set
+	{
+		leuart -> STARTFRAME &= ~0x01;
+		while (leuart -> SYNCBUSY & LEUART_SYNCBUSY_STARTFRAME);
+		EFM_ASSERT(!(leuart -> STARTFRAME & 0x01));
+		leuart -> STARTFRAME |= 0x01;
+	}
 	// LEUART Initialization
 	LEUART_Init_TypeDef leuart_init_s;
 	leuart_init_s.baudrate = leuart_settings -> baudrate;
