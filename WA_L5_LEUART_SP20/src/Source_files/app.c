@@ -17,20 +17,6 @@
 #include "sleep_routines.h"
 #include "si7021.h"
 
-//***********************************************************************************
-// defined files
-//***********************************************************************************
-
-
-//***********************************************************************************
-// global variables
-//***********************************************************************************
-
-
-//***********************************************************************************
-// function
-//***********************************************************************************
-
 /**
  * @brief
  *	Set up the peripherals.
@@ -50,6 +36,8 @@ void app_peripheral_setup(void)
 	gpio_open();
 	app_letimer_pwm_open(PWM_PER, PWM_ACT_PER);
 	si7021_i2c_open();
+
+	add_scheduled_event(BOOT_UP_EVT);
 }
 
 
@@ -151,4 +139,17 @@ void scheduled_i2c_si7021_evt(void)
 		GPIO_PinOutSet(LED1_port, LED1_pin);
 	else
 		GPIO_PinOutClear(LED1_port, LED1_pin);
+}
+
+void scheduled_leuart_rx_done_evt(void)
+{
+
+}
+void scheduled_leuart_tx_done_evt(void)
+{
+
+}
+void scheduled_boot_up_evt(void)
+{
+	  letimer_start(LETIMER0, true);
 }

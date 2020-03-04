@@ -31,7 +31,11 @@
 	#define SI7021_SDA_PIN			10			/**< Si7021's SDA GPIO Pin  **/
 	#define SI7021_SENSOR_EN_PORT	gpioPortB	/**< Si7021's EN GPIO Port  **/
 	#define SI7021_SENSOR_EN_PIN	10			/**< Si7021's EN GPIO Pin   **/
-
+	// LEUART HM10
+	#define LEUART_RX_PORT		gpioPortD
+	#define LEUART_RX_PIN		11
+	#define LEUART_TX_PORT		gpioPortD
+	#define LEUART_TX_PIN		10
 //***********************************************************************************
 // global variables
 //***********************************************************************************

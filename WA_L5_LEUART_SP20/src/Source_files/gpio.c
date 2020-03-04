@@ -1,10 +1,8 @@
 /**
- *
  * @file gpio.c
  * @author William Abrams
  * @date 28th Jan. 2020
  * @brief GPIO Controller File
- *
 **/
 
 //***********************************************************************************
@@ -13,21 +11,6 @@
 #include "gpio.h"
 #include "em_cmu.h"
 #include <stdbool.h>
-
-//***********************************************************************************
-// defined files
-//***********************************************************************************
-
-
-//***********************************************************************************
-// global variables
-//***********************************************************************************
-
-
-//***********************************************************************************
-// function prototypes
-//***********************************************************************************
-
 
 //***********************************************************************************
 // functions
@@ -56,4 +39,10 @@ void gpio_open(void)
 	// SI7021 SCL and SDA
 	GPIO_PinModeSet(SI7021_SCL_PORT, SI7021_SCL_PIN, gpioModeWiredAnd, true);
 	GPIO_PinModeSet(SI7021_SDA_PORT, SI7021_SDA_PIN, gpioModeWiredAnd, true);
+	// LEUART TXD
+	GPIO_DriveStrengthSet(LEUART_TX_PORT, gpioDriveStrengthStrongAlternateWeak);
+	GPIO_PinModeSet(LEUART_TX_PORT, LEUART_TX_PIN, gpioModePushPull, 1);
+	// LEUART RXD
+	GPIO_PinModeSet(LEUART_RX_PORT, LEUART_RX_PIN, gpioModeInput, 0);
+
 }

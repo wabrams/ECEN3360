@@ -66,8 +66,7 @@ int main(void)
   /* Call application program to open / initialize all required peripheral */
   app_peripheral_setup();
 
-  letimer_start(LETIMER0, true);
-
+  EFM_ASSERT(get_scheduled_events() & BOOT_UP_EVT);
   /* Infinite blink loop */
   while (1)
   {
@@ -85,6 +84,12 @@ int main(void)
 			  scheduled_letimer0_comp1_evt();
 		  if (events & I2C_SI7021_EVT)
 			  scheduled_i2c_si7021_evt();
+		  if (events & LEUART_RX_DONE_EVT)
+			  scheduled_leuart_rx_done_evt();
+		  if (events & LEUART_TX_DONE_EVT)
+			  scheduled_leuart_tx_done_evt();
+		  if (events & BOOT_UP_EVT)
+			  scheduled_boot_up_evt();
 	  }
   }
 }
