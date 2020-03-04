@@ -9,7 +9,7 @@
 #define SI7021_I2C_CLK_RATIO		I2C_CTRL_CLHR_STANDARD		/** Clock Ratio, same as i2cClockHLRStandard **/
 #define SI7021_SCL_EN				I2C_ROUTEPEN_SCLPEN			/**< I2C SCL enable **/
 #define SI7021_SDA_EN				I2C_ROUTEPEN_SDAPEN			/**< I2C SDA enable **/
-#define SI7021_I2Cn					0							/**< Preprocessor MUX Control for I2C0 I2C1 selection **/
+#define SI7021_I2Cn					1							/**< Preprocessor MUX Control for I2C0 I2C1 selection **/
 #if SI7021_I2Cn == 0
 	#define SI7021_I2C 				I2C0						/**< Si7021 set to use I2C0 **/
 	#define SI7021_SCL_LOC			I2C_ROUTELOC0_SCLLOC_LOC15	/**< I2C0 SCL route location info **/

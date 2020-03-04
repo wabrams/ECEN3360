@@ -200,6 +200,7 @@ static void i2c_rxdatav(I2C_TypeDef * i2c)
 			break;
 		default:
 			EFM_ASSERT(false);
+			break;
 	}
 }
 
@@ -236,8 +237,7 @@ void I2C0_IRQHandler(void)
 {
 	__disable_irq();
 
-	uint32_t iflags = I2C0 -> IF & I2C0 -> IEN;
-	I2C0 -> IFC = I2C0 -> IF;
+	uint32_t iflags = (I2C0 -> IFC = I2C0 -> IF) & I2C0 -> IEN;
 
 	if (iflags & I2C_IF_ACK)
 		i2c_ack(I2C0);
@@ -260,9 +260,8 @@ void I2C0_IRQHandler(void)
 void I2C1_IRQHandler(void)
 {
 	__disable_irq();
-	//TODO: change to concurrent assignment to flex on DDL peers and TAs
-	uint32_t iflags = I2C1 -> IF & I2C1 -> IEN;
-	I2C1 -> IFC = I2C1 -> IF;
+
+	uint32_t iflags = (I2C1 -> IFC = I2C1 -> IF) & I2C1 -> IEN;
 
 	if (iflags & I2C_IF_ACK)
 		i2c_ack(I2C1);
