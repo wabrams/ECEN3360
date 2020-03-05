@@ -61,7 +61,7 @@ void i2c_open(I2C_TypeDef * i2c, I2C_OPEN_STRUCT * i2c_open_s, I2C_IO_STRUCT * i
 	else if (i2c == I2C1)
 		NVIC_EnableIRQ(I2C1_IRQn);
 
-	__enable_irq(); //TODO: might want this in start instead
+	__enable_irq();
 }
 
 /**
@@ -86,7 +86,7 @@ void i2c_bus_reset(I2C_TypeDef * i2c, I2C_IO_STRUCT * i2c_io_s)
 	// Toggle SCL 9 times, while SDA is held high
 	GPIO_PinOutSet(i2c_io_s -> SDA_PORT, i2c_io_s -> SDA_PIN);
 
-	for (int i = 0; i < 9; i++) //TODO: pragma GCC unroll n
+	for (int i = 0; i < 9; i++) //MAYBE: pragma GCC unroll n
 	{
 		GPIO_PinOutClear(i2c_io_s -> SCL_PORT, i2c_io_s -> SCL_PIN);
 		GPIO_PinOutSet(i2c_io_s -> SCL_PORT, i2c_io_s -> SCL_PIN);
@@ -132,7 +132,7 @@ static void i2c_ack(I2C_TypeDef * i2c)
 	{
 		case I2C_STATE_START:
 			//device is open and ready for measurement
-			i2c_payload_s -> i2c_state = I2C_STATE_CMDW; //TODO: i2c_state++ instead of set?
+			i2c_payload_s -> i2c_state = I2C_STATE_CMDW; //MAYBE: i2c_state++ instead of set?
 			i2c -> TXDATA = i2c_payload_s -> dev_cmd;
 			break;
 		case I2C_STATE_CMDW:

@@ -42,7 +42,7 @@ void leuart_open(LEUART_TypeDef * leuart, LEUART_OPEN_STRUCT * leuart_settings)
 	leuart_init_s.refFreq  = leuart_settings -> refFreq;
 	leuart_init_s.stopbits = leuart_settings -> stopbits;
 	LEUART_Init(leuart, &leuart_init_s);
-	//TODO: see if syncbusy wait is actually needed here (lab says to)
+	//MAYBE: see if syncbusy wait is actually needed here (lab says to)
 	while(leuart -> SYNCBUSY);
 
 	// LEUART Routing Setup

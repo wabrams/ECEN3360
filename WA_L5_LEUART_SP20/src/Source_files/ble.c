@@ -28,7 +28,7 @@ void ble_open(uint32_t tx_event, uint32_t rx_event)
 	leuart_open_s.tx_rloc = LEUART0_TX_RLOC;
 	leuart_open_s.tx_rpen = LEUART0_TX_RPEN;
 	leuart_open_s.tx_en   = true;
-	//TODO: LEUART MISC.
+	//FIXME: LEUART MISC.
 //	leuart_open_s.startframe = ;
 //	leuart_open_s.sigframe = ;
 	// LEUART SCHEDULED EVENTS
