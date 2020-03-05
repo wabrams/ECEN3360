@@ -1,5 +1,6 @@
 
 #include <string.h>
+#include <stdbool.h>
 #include "em_gpio.h"
 #include "em_cmu.h"
 #include "leuart.h"
@@ -41,13 +42,16 @@ void leuart_open(LEUART_TypeDef * leuart, LEUART_OPEN_STRUCT * leuart_settings)
 	leuart_init_s.refFreq  = leuart_settings -> refFreq;
 	leuart_init_s.stopbits = leuart_settings -> stopbits;
 	LEUART_Init(leuart, &leuart_init_s);
+	//TODO: see if syncbusy wait is actually needed here (lab says to)
+	while(leuart -> SYNCBUSY);
 
 	// LEUART Routing Setup
 	leuart -> ROUTELOC0 = leuart_settings -> rx_rloc | leuart_settings -> tx_rloc;
-	leuart -> ROUTEPEN = (leuart_settings -> rx_en * leuart_settings -> rx_rpen) | (leuart_settings -> tx_en * leuart_settings -> tx_rpen);
+	leuart -> ROUTEPEN = leuart_settings -> rx_rpen | leuart_settings -> tx_rpen;
 
 	// MISC Setup
-
+	leuart -> CMD = (LEUART_CMD_RXBLOCKEN * leuart_settings -> rxblocken) | (LEUART_CMD_RXEN * leuart_settings -> rx_en) | (LEUART_CMD_TXEN * leuart_settings -> tx_en);
+	leuart -> CTRL = leuart_settings -> sfubrx * LEUART_CTRL_SFUBRX;
 
 	// Setup for Start Frame
 	leuart -> STARTFRAME = leuart_settings -> startframe;
@@ -55,12 +59,26 @@ void leuart_open(LEUART_TypeDef * leuart, LEUART_OPEN_STRUCT * leuart_settings)
 	// Setup for Signal Frame
 	leuart -> SIGFRAME = leuart_settings -> sigframe;
 
+
+	// Sync Up for CMD
+	while (leuart -> SYNCBUSY & LEUART_SYNCBUSY_CMD);
+	// Clear TX and RX Buffers
+	leuart -> CMD = LEUART_CMD_CLEARRX | LEUART_CMD_CLEARTX;
+
+	// Sync All
+	while (leuart -> SYNCBUSY);
+
+	// Verify RX and TX EN
+	EFM_ASSERT(leuart -> STATUS & LEUART_STATUS_RXENS == leuart_settings -> rx_en * LEUART_STATUS_RXENS);
+	EFM_ASSERT(leuart -> STATUS & LEUART_STATUS_TXENS == leuart_settings -> tx_en * LEUART_STATUS_TXENS);
+
 	// Setup for Scheduler
 	rx_done_evt = leuart_settings -> rx_done_evt;
 	tx_done_evt = leuart_settings -> tx_done_evt;
 
 	// Setup for Interrupts
-	leuart -> IEN = (LEUART_IEN_SIGF * leuart_settings -> sigframe_en) | (LEUART_IEN_STARTF * leuart_settings -> startframe_en);
+	leuart -> IFC = leuart -> IF;
+	leuart -> IEN = (LEUART_IEN_SIGF * leuart_settings -> sigframe_en) | (LEUART_IEN_STARTF * leuart_settings -> startframe_en) | LEUART_IEN_TXBL | LEUART_IEN_TXC; //TODO: TXC not needed?
 	NVIC_EnableIRQ(LEUART0_IRQn);
 }
 

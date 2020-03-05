@@ -25,11 +25,11 @@ typedef struct
 	// LEUART RX and TX RouteLoc
 	uint32_t					rx_rloc;
 	uint32_t					rx_rpen;
-	bool						rx_en;
 	uint32_t					tx_rloc;
 	uint32_t					tx_rpen;
+	// LEUART CMD Vars
+	bool						rx_en;
 	bool						tx_en;
-	// TODO: unsure what this is for tbh
 	bool						rxblocken;
 	// START and SIG Variables
 	bool						sfubrx;
