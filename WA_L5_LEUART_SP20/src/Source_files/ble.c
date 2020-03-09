@@ -24,13 +24,18 @@ void ble_open(uint32_t tx_event, uint32_t rx_event)
 	// LEUART RX and TX RouteLoc
 	leuart_open_s.rx_rloc = LEUART0_RX_RLOC;
 	leuart_open_s.rx_rpen = LEUART0_RX_RPEN;
-	leuart_open_s.rx_en   = true;
 	leuart_open_s.tx_rloc = LEUART0_TX_RLOC;
 	leuart_open_s.tx_rpen = LEUART0_TX_RPEN;
+	// LEUART CMD SETUP
+	leuart_open_s.rx_en   = true;
 	leuart_open_s.tx_en   = true;
-	//FIXME: LEUART MISC.
-//	leuart_open_s.startframe = ;
-//	leuart_open_s.sigframe = ;
+	leuart_open_s.rxblocken = false;
+	// LEUART START AND SIG FRAMES
+	leuart_open_s.sfubrx = false;
+	leuart_open_s.startframe_en = false;
+	leuart_open_s.startframe = ' ';
+	leuart_open_s.sigframe_en = false;
+	leuart_open_s.sigframe = ' ';
 	// LEUART SCHEDULED EVENTS
 	leuart_open_s.rx_done_evt = LEUART_RX_DONE_EVT;
 	leuart_open_s.tx_done_evt = LEUART_TX_DONE_EVT;
@@ -75,7 +80,7 @@ void ble_write(char * string)
 
 bool ble_test(char * mod_name)
 {
-	uint32_t	str_len;
+	uint32_t str_len;
 
 	__disable_irq();
 

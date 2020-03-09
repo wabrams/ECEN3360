@@ -1,12 +1,9 @@
 /**
- *
  * @file app.c
  * @author William Abrams
  * @date 28th Jan. 2020
  * @brief Application controller file, for what we're trying to do
- *
 **/
-
 
 //***********************************************************************************
 // Include files
@@ -16,6 +13,11 @@
 #include "scheduler.h"
 #include "sleep_routines.h"
 #include "si7021.h"
+#include "ble.h"
+#include <string.h>
+#include <stdio.h>
+
+static char tempToPrint[32];
 
 /**
  * @brief
@@ -36,7 +38,7 @@ void app_peripheral_setup(void)
 	gpio_open();
 	app_letimer_pwm_open(PWM_PER, PWM_ACT_PER);
 	si7021_i2c_open();
-
+	ble_open(LEUART_TX_DONE_EVT, LEUART_RX_DONE_EVT);
 	add_scheduled_event(BOOT_UP_EVT);
 }
 
@@ -135,6 +137,11 @@ void scheduled_i2c_si7021_evt(void)
 	remove_scheduled_event(I2C_SI7021_EVT);
 
 	float temp = si7021_temp_F();
+	int leftDec = (int)temp;
+	int rightDec = ((int)(temp * 100.0)) % 100;
+	sprintf(tempToPrint, "%d.%d F\n", leftDec, rightDec);
+	leuart_start(LEUART0, tempToPrint, strlen(tempToPrint));
+
 	if (temp >= TEMP_THRESHOLD)
 		GPIO_PinOutSet(LED1_port, LED1_pin);
 	else
@@ -151,5 +158,7 @@ void scheduled_leuart_tx_done_evt(void)
 }
 void scheduled_boot_up_evt(void)
 {
-	  letimer_start(LETIMER0, true);
+	remove_scheduled_event(BOOT_UP_EVT);
+	letimer_start(LETIMER0, true);
+//	EFM_ASSERT(ble_test("WA-PG12"));
 }

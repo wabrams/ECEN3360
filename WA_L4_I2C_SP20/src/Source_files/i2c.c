@@ -132,7 +132,7 @@ static void i2c_ack(I2C_TypeDef * i2c)
 	{
 		case I2C_STATE_START:
 			//device is open and ready for measurement
-			i2c_payload_s -> i2c_state = I2C_STATE_CMDW; //MAYBE: i2c_state++ instead of set?
+			i2c_payload_s -> i2c_state = I2C_STATE_CMDW;
 			i2c -> TXDATA = i2c_payload_s -> dev_cmd;
 			break;
 		case I2C_STATE_CMDW:

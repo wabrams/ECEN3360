@@ -6,18 +6,19 @@
 #include "leuart.h"
 #include "scheduler.h"
 
-uint32_t	rx_done_evt;
-uint32_t	tx_done_evt;
+static uint32_t	rx_done_evt;
+static uint32_t	tx_done_evt;
 
-uint32_t	str_ptr;
-uint32_t	max_len;
-char		output_str[80];
-bool		leuart0_tx_busy;
+static leuart_txstate_t txstate = LEUART_STATE_IDLE; //TODO: unused
+static bool leuart0_txbusy = false;
+static char * txstring;
+static uint32_t txcnt = 0;
 
 void leuart_open(LEUART_TypeDef * leuart, LEUART_OPEN_STRUCT * leuart_settings)
 {
 	// Enable LEUART0 Clock
-	CMU_ClockEnable(cmuClock_LEUART0, true);
+	if (leuart == LEUART0)
+		CMU_ClockEnable(cmuClock_LEUART0, true);
 	// Verify Clock Tree
 	if ((leuart -> STARTFRAME & 0x01) == 0) //LSB not set
 	{
@@ -50,7 +51,7 @@ void leuart_open(LEUART_TypeDef * leuart, LEUART_OPEN_STRUCT * leuart_settings)
 	leuart -> ROUTEPEN = leuart_settings -> rx_rpen | leuart_settings -> tx_rpen;
 
 	// MISC Setup
-	leuart -> CMD = (LEUART_CMD_RXBLOCKEN * leuart_settings -> rxblocken) | (LEUART_CMD_RXEN * leuart_settings -> rx_en) | (LEUART_CMD_TXEN * leuart_settings -> tx_en);
+	leuart -> CMD = (LEUART_CMD_RXBLOCKEN * leuart_settings -> rxblocken);
 	leuart -> CTRL = leuart_settings -> sfubrx * LEUART_CTRL_SFUBRX;
 
 	// Setup for Start Frame
@@ -58,7 +59,6 @@ void leuart_open(LEUART_TypeDef * leuart, LEUART_OPEN_STRUCT * leuart_settings)
 
 	// Setup for Signal Frame
 	leuart -> SIGFRAME = leuart_settings -> sigframe;
-
 
 	// Sync Up for CMD
 	while (leuart -> SYNCBUSY & LEUART_SYNCBUSY_CMD);
@@ -69,8 +69,8 @@ void leuart_open(LEUART_TypeDef * leuart, LEUART_OPEN_STRUCT * leuart_settings)
 	while (leuart -> SYNCBUSY);
 
 	// Verify RX and TX EN
-	EFM_ASSERT(leuart -> STATUS & LEUART_STATUS_RXENS == leuart_settings -> rx_en * LEUART_STATUS_RXENS);
-	EFM_ASSERT(leuart -> STATUS & LEUART_STATUS_TXENS == leuart_settings -> tx_en * LEUART_STATUS_TXENS);
+	EFM_ASSERT((leuart -> STATUS & LEUART_STATUS_RXENS) == (leuart_settings -> rx_en * LEUART_STATUS_RXENS));
+	EFM_ASSERT((leuart -> STATUS & LEUART_STATUS_TXENS) == (leuart_settings -> tx_en * LEUART_STATUS_TXENS));
 
 	// Setup for Scheduler
 	rx_done_evt = leuart_settings -> rx_done_evt;
@@ -78,32 +78,36 @@ void leuart_open(LEUART_TypeDef * leuart, LEUART_OPEN_STRUCT * leuart_settings)
 
 	// Setup for Interrupts
 	leuart -> IFC = leuart -> IF;
-	leuart -> IEN = (LEUART_IEN_SIGF * leuart_settings -> sigframe_en) | (LEUART_IEN_STARTF * leuart_settings -> startframe_en) | LEUART_IEN_TXBL | LEUART_IEN_TXC; //TODO: TXC not needed?
-	NVIC_EnableIRQ(LEUART0_IRQn);
+	leuart -> IEN = (LEUART_IEN_SIGF * leuart_settings -> sigframe_en) | (LEUART_IEN_STARTF * leuart_settings -> startframe_en);
+	if (leuart == LEUART0)
+		NVIC_EnableIRQ(LEUART0_IRQn);
 }
 
 void LEUART0_IRQHandler(void)
 {
 	__disable_irq();
 
-	uint32_t iflags = LEUART0 -> IF & LEUART0 -> IEN;
-	LEUART0 -> IFC = LEUART0 -> IF;
+	uint32_t iflags = (LEUART0 -> IFC = LEUART0 -> IF) & LEUART0 -> IEN;
 
-	if (iflags & LEUART_IF_SIGF)
-	{
-
-	}
-	if (iflags & LEUART_IF_STARTF)
-	{
-
-	}
+	if (iflags & LEUART_IF_SIGF){} //TODO: NYI
+	if (iflags & LEUART_IF_STARTF){} //TODO:NYI
 	if (iflags & LEUART_IF_TXBL)
 	{
-
+		if (txcnt > 0)
+		{
+			LEUART0 -> TXDATA = txstring[0];
+			txstring++; //slide pointer over
+			txcnt--; //one less char to send
+		}
+		else
+		{
+			LEUART0 -> IEN &= ~LEUART_IEN_TXBL;
+			LEUART0 -> IEN |= LEUART_IEN_TXC;
+		}
 	}
 	if (iflags & LEUART_IF_TXC)
 	{
-
+		sleep_unblock_mode(LEUART_TX_EM);
 	}
 
 	__enable_irq();
@@ -111,13 +115,21 @@ void LEUART0_IRQHandler(void)
 
 void leuart_start(LEUART_TypeDef * leuart, char * string, uint32_t string_len)
 {
-
+	//wait till not busy
+	while(leuart_tx_busy(leuart));
+	//block sleep
+	sleep_block_mode(LEUART_TX_EM);
+	//copy over tx information
+	txstring = string;
+	txcnt = string_len;
+	//enable TXBL (should hit immediately)
+	leuart -> IEN |= LEUART_IEN_TXBL;
 }
 
 bool leuart_tx_busy(LEUART_TypeDef * leuart)
 {
 	if (leuart == LEUART0)
-		return leuart0_tx_busy;
+		return leuart0_txbusy;
 	return true;
 }
 
