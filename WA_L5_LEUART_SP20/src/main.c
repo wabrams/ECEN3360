@@ -66,6 +66,7 @@ int main(void)
   app_peripheral_setup();
 
   EFM_ASSERT(get_scheduled_events() & BOOT_UP_EVT);
+
   /* Infinite blink loop */
   while (1)
   {

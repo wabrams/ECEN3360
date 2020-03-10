@@ -154,7 +154,7 @@ void scheduled_leuart_rx_done_evt(void)
 }
 void scheduled_leuart_tx_done_evt(void)
 {
-
+	//TODO: have this called from leuart.c to unblock sleep
 }
 void scheduled_boot_up_evt(void)
 {

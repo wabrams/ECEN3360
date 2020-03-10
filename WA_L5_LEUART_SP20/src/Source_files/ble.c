@@ -45,6 +45,7 @@ void ble_open(uint32_t tx_event, uint32_t rx_event)
 
 void ble_write(char * string)
 {
+	//TODO: app should call this and this should copy and "store the string"
 	leuart_start(HM10_LEUART0, string, strlen(string));
 }
 

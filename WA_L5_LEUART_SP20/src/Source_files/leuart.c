@@ -95,7 +95,7 @@ void LEUART0_IRQHandler(void)
 	{
 		if (txcnt > 0)
 		{
-			LEUART0 -> TXDATA = txstring[0];
+			LEUART0 -> TXDATA = txstring[0]; //MAYBE: *txstring
 			txstring++; //slide pointer over
 			txcnt--; //one less char to send
 		}

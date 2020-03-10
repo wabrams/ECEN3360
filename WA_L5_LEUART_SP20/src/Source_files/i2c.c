@@ -161,7 +161,7 @@ static void i2c_ack(I2C_TypeDef * i2c)
  * 	pointer to I2C0 or I2C1
  **/
 static void i2c_nack(I2C_TypeDef * i2c)
-{
+{	//FIXME: static inline void i2c_nack()
 	switch(i2c_payload_s -> i2c_state)
 	{
 		case I2C_STATE_CMDR:

@@ -5,16 +5,16 @@
 #include "em_leuart.h"
 #include "sleep_routines.h"
 
-#define LEUART_TX_EM		EM2
-#define LEUART_RX_EM		EM4
+#define LEUART_TX_EM EM2
+#define LEUART_RX_EM EM4
 
 typedef enum
 {
-	LEUART_STATE_IDLE,
-	LEUART_STATE_START,
-	LEUART_STATE_TRANSMIT,
-	LEUART_STATE_DONE,
-	LEUART_STATE_STOP
+	LEUART_STATE_TX_IDLE,
+	LEUART_STATE_TX_START,
+	LEUART_STATE_TX_TRANSMIT,
+	LEUART_STATE_TX_DONE,
+	LEUART_STATE_TX_STOP
 } leuart_txstate_t;
 
 /***************************************************************************//**
