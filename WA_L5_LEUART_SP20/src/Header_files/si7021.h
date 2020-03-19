@@ -5,7 +5,7 @@
 
 #define SI7021_DEV_ADDR				0x40						/**< Si7021 Device Address **/
 #define SI7021_TEMP_NO_HOLD			0xF3						/**< Register Address for measure temp, no hold **/
-#define SI7021_I2C_FREQ				I2C_FREQ_STANDARD_MAX		/**< Si7021 I2C frequency **/
+#define SI7021_I2C_FREQ				I2C_FREQ_FAST_MAX			/**< Si7021 I2C frequency **/
 #define SI7021_I2C_CLK_RATIO		I2C_CTRL_CLHR_STANDARD		/** Clock Ratio, same as i2cClockHLRStandard **/
 #define SI7021_SCL_EN				I2C_ROUTEPEN_SCLPEN			/**< I2C SCL enable **/
 #define SI7021_SDA_EN				I2C_ROUTEPEN_SDAPEN			/**< I2C SDA enable **/

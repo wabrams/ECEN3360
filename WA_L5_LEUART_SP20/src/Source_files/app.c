@@ -17,7 +17,7 @@
 #include <string.h>
 #include <stdio.h>
 
-static char tempToPrint[32];
+static char tempToPrint[32];	/**< string containing temperature to print (used by LEUART) **/
 
 /**
  * @brief
@@ -147,15 +147,34 @@ void scheduled_i2c_si7021_evt(void)
 	else
 		GPIO_PinOutClear(LED1_port, LED1_pin);
 }
-
+/**
+ * @brief
+ * 	Scheduled Event Handler for LEUART upon completion of RX
+ * @details
+ * 	Removes event from the scheduler
+ **/
 void scheduled_leuart_rx_done_evt(void)
 {
-
+	remove_scheduled_event(LEUART_RX_DONE_EVT);
 }
+/**
+ * @brief
+ * 	Scheduled Event Handler for LEUART upon completion of TX
+ * @details
+ * 	Removes event from the scheduler
+ **/
 void scheduled_leuart_tx_done_evt(void)
 {
-	//TODO: have this called from leuart.c to unblock sleep
+	remove_scheduled_event(LEUART_TX_DONE_EVT);
 }
+/**
+ * @brief
+ * 	Scheduled Event Handler for Boot Up event
+ * @details
+ * 	This event is only called once, during boot up, and serves to setup anything we need for the device
+ * @note
+ * 	The call to ble_test() only needs to happen once, and then it is commented out
+ **/
 void scheduled_boot_up_evt(void)
 {
 	remove_scheduled_event(BOOT_UP_EVT);

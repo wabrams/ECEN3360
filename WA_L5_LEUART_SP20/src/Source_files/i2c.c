@@ -34,6 +34,7 @@ void i2c_open(I2C_TypeDef * i2c, I2C_OPEN_STRUCT * i2c_open_s, I2C_IO_STRUCT * i
 	{
 		i2c -> IFC = 0x1;
 		EFM_ASSERT(!(i2c -> IF & 0x1));
+		//MAYBE: why do we not re-set the IF here?
 	}
 	else
 	{
@@ -127,7 +128,7 @@ void i2c_start(I2C_TypeDef * i2c, I2C_PAYLOAD_STRUCT * i2c_pl_s)
  * @param[in] i2c
  * 	pointer to I2C0 or I2C1
  **/
-static void i2c_ack(I2C_TypeDef * i2c)
+static inline void i2c_ack(I2C_TypeDef * i2c)
 {
 	switch(i2c_payload_s -> i2c_state)
 	{
@@ -160,8 +161,8 @@ static void i2c_ack(I2C_TypeDef * i2c)
  * @param[in] i2c
  * 	pointer to I2C0 or I2C1
  **/
-static void i2c_nack(I2C_TypeDef * i2c)
-{	//FIXME: static inline void i2c_nack()
+static inline void i2c_nack(I2C_TypeDef * i2c)
+{
 	switch(i2c_payload_s -> i2c_state)
 	{
 		case I2C_STATE_CMDR:
@@ -183,7 +184,7 @@ static void i2c_nack(I2C_TypeDef * i2c)
  * @param[in] i2c
  * 	pointer to I2C0 or I2C1
  **/
-static void i2c_rxdatav(I2C_TypeDef * i2c)
+static inline void i2c_rxdatav(I2C_TypeDef * i2c)
 {
 	switch(i2c_payload_s -> i2c_state)
 	{
@@ -213,7 +214,7 @@ static void i2c_rxdatav(I2C_TypeDef * i2c)
  * @param[in] i2c
  * 	pointer to I2C0 or I2C1
  **/
-static void i2c_mstop(I2C_TypeDef * i2c)
+static inline void i2c_mstop(I2C_TypeDef * i2c)
 {
 	switch(i2c_payload_s -> i2c_state)
 	{

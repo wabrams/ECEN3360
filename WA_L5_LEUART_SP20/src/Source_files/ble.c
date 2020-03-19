@@ -1,7 +1,7 @@
 /**
  * @file ble.c
- * @author Keith Graham
- * @date November 28th, 2019
+ * @author William Abrams
+ * @date March 8th, 2020
  * @brief Contains all the functions to interface the application with the HM-18
  *   BLE module and the LEUART driver
  **/
@@ -11,6 +11,16 @@
 #include "leuart.h"
 #include <string.h>
 
+/**
+ * @brief
+ *
+ * @details
+ *
+ * @param[in] tx_event
+ *
+ * @param[in] rx_event
+ *
+ **/
 void ble_open(uint32_t tx_event, uint32_t rx_event)
 {
 	LEUART_OPEN_STRUCT leuart_open_s;
@@ -36,6 +46,8 @@ void ble_open(uint32_t tx_event, uint32_t rx_event)
 	leuart_open_s.startframe = ' ';
 	leuart_open_s.sigframe_en = false;
 	leuart_open_s.sigframe = ' ';
+	// LEUART DMA
+	leuart_open_s.tx_dma = LEUART_TX_DMA;
 	// LEUART SCHEDULED EVENTS
 	leuart_open_s.rx_done_evt = LEUART_RX_DONE_EVT;
 	leuart_open_s.tx_done_evt = LEUART_TX_DONE_EVT;
@@ -43,13 +55,21 @@ void ble_open(uint32_t tx_event, uint32_t rx_event)
 	leuart_open(HM10_LEUART0, &leuart_open_s);
 }
 
+/**
+ * @brief
+ *	Starts a write to the BLE (HM-10) device
+ * @details
+ *	Uses input string to call leuart_start(), which begins transmitting the string if LEUART is not already transmitting
+ * @param[in] string
+ *	input string to be transmitted
+ **/
 void ble_write(char * string)
 {
-	//TODO: app should call this and this should copy and "store the string"
+	//MAYBE: app should call this and this should copy and "store the string"
 	leuart_start(HM10_LEUART0, string, strlen(string));
 }
 
-/***************************************************************************//**
+/**
  * @brief
  *   BLE Test performs two functions.  First, it is a Test Driven Development
  *   routine to verify that the LEUART is correctly configured to communicate
@@ -77,8 +97,7 @@ void ble_write(char * string)
  * @return
  *   Returns bool true if successfully passed through the tests in this
  *   function.
- ******************************************************************************/
-
+ **/
 bool ble_test(char * mod_name)
 {
 	uint32_t str_len;

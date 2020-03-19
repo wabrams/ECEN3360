@@ -3,7 +3,6 @@
  **/
 #ifndef APP_H
 #define APP_H
-
 //***********************************************************************************
 // Include files
 //***********************************************************************************
@@ -33,16 +32,16 @@
 		#define LEUART_TX_DONE_EVT		0x00000020 /**< Scheduler Event ID for LEUART0_TX_DONE_EVT **/
 		#define BOOT_UP_EVT				0x80000000 /**< Scheduler Event ID for BOOT_UP_EVT (MAX)   **/
 
-	typedef enum
-	{
-		EVT_LETIMER0_COMP0	= 1 << 0,
-		EVT_LETIMER0_COMP1	= 1 << 1,
-		EVT_LETIMER0_UF		= 1 << 2,
-		EVT_I2C_SI7021		= 1 << 3,
-		EVT_LEUART_RX_DONE	= 1 << 4,
-		EVT_LEUART_TX_DONE	= 1 << 5,
-		EVT_BOOT_UP_EVT		= 1 << 6
-	} scheduler_t;
+//	typedef enum
+//	{
+//		EVT_LETIMER0_COMP0	= 1 << 0,
+//		EVT_LETIMER0_COMP1	= 1 << 1,
+//		EVT_LETIMER0_UF		= 1 << 2,
+//		EVT_I2C_SI7021		= 1 << 3,
+//		EVT_LEUART_RX_DONE	= 1 << 4,
+//		EVT_LEUART_TX_DONE	= 1 << 5,
+//		EVT_BOOT_UP_EVT		= 1 << 6
+//	} scheduler_t;
 //***********************************************************************************
 // global variables
 //***********************************************************************************
@@ -60,6 +59,5 @@ void scheduled_i2c_si7021_evt(void);
 void scheduled_leuart_rx_done_evt(void);
 void scheduled_leuart_tx_done_evt(void);
 void scheduled_boot_up_evt(void);
-
 
 #endif /* APP_H */

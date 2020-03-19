@@ -1,3 +1,6 @@
+/**
+ * @file leuart.h
+ **/
 
 #ifndef LEUART_H
 #define LEUART_H
@@ -5,52 +8,55 @@
 #include "em_leuart.h"
 #include "sleep_routines.h"
 
-#define LEUART_TX_EM EM2
-#define LEUART_RX_EM EM4
+#define LEUART_TX_EM EM3 	/**< lowest energy mode LEUART can TX in **/
+#define LEUART_RX_EM EM4	/**< lowest energy mode LEUART can RX in **/
 
+/**
+ * @brief
+ * LEUART TX State Machine Enumeration
+ **/
 typedef enum
 {
-	LEUART_STATE_TX_IDLE,
-	LEUART_STATE_TX_START,
-	LEUART_STATE_TX_TRANSMIT,
-	LEUART_STATE_TX_DONE,
-	LEUART_STATE_TX_STOP
+	LEUART_STATE_TX_IDLE,			/**< idle state **/
+	LEUART_STATE_TX_TRANSMIT,		/**< transmit state **/
+	LEUART_STATE_TX_DONE,			/**< completed state **/
 } leuart_txstate_t;
 
-/***************************************************************************//**
- * @addtogroup leuart
- * @{
- ******************************************************************************/
-
+/**
+ * @brief
+ * Structure used for leuart_open() to pass all relevant values
+ **/
 typedef struct
 {
 	// LEUART_Init_TypeDef
-	uint32_t					baudrate;
-	LEUART_Databits_TypeDef		databits;
-	LEUART_Enable_TypeDef		enable;
-	LEUART_Parity_TypeDef 		parity;
-	uint32_t 					refFreq;
-	LEUART_Stopbits_TypeDef		stopbits;
+	uint32_t					baudrate;		/**< LEUART baud rate to be used **/
+	LEUART_Databits_TypeDef		databits;		/**< LEUART data bits to be used **/
+	LEUART_Enable_TypeDef		enable;			/**< LEUART enable post init **/
+	LEUART_Parity_TypeDef 		parity;			/**< LEUART parity setting to be used **/
+	uint32_t 					refFreq;		/**< LEUART reference frequency **/
+	LEUART_Stopbits_TypeDef		stopbits;		/**< LEUART stop bits to be used **/
 	// LEUART RX and TX RouteLoc
-	uint32_t					rx_rloc;
-	uint32_t					rx_rpen;
-	uint32_t					tx_rloc;
-	uint32_t					tx_rpen;
+	uint32_t					rx_rloc;		/**< LEUART RX pin routing **/
+	uint32_t					rx_rpen;		/**< LEUART RX pin enabling **/
+	uint32_t					tx_rloc;		/**< LEUART TX pin routing **/
+	uint32_t					tx_rpen;		/**< LEUART TX pin enabling **/
 	// LEUART CMD Vars
-	bool						rx_en;
-	bool						tx_en;
-	bool						rxblocken;
+	bool						rx_en;			/**< LEUART RX enable **/
+	bool						tx_en;			/**< LEUART TX enable **/
+	bool						rxblocken;		/**< LEUART RXBLOCK enable (for use with SIGF or STARTF) **/
 	// START and SIG Variables
-	bool						sfubrx;
-	bool						startframe_en;
-	char						startframe;		/**< With 8 data-bit frame, only the 8 least significant bits of LEUARTn_STARTFRAME are compared. **/
-	bool						sigframe_en;
-	char						sigframe;		/**< With 8 data-bit frame, only the 8 least significant bits of LEUARTn_SIGFRAME are compared. **/
+	bool						sfubrx;			/**< LEUART StartF UnBlock RX **/
+	bool						startframe_en;	/**< LEUART STARTF enable **/
+	char						startframe;		/**< LEUART STARTF character (8 bit only) **/
+	bool						sigframe_en;	/**< LEUART SIGF enable **/
+	char						sigframe;		/**< LEUART SIGF character (8 bit only) **/
+	// DMA
+	bool 						rx_dma;			/**< TODO: Unused. Enables RX DMA in EM2 **/
+	bool 						tx_dma;			/**< TODO: Unused. Enables TX DMA in EM2 **/
 	// Scheduler Event IDs
-	uint32_t					rx_done_evt;
-	uint32_t					tx_done_evt;
+	uint32_t					rx_done_evt;	/**< Scheduler ID for RX Done event **/
+	uint32_t					tx_done_evt;	/**< Scheduler ID for TX Done event **/
 } LEUART_OPEN_STRUCT;
-/** @} (end addtogroup leuart) */
 
 void leuart_open(LEUART_TypeDef *leuart, LEUART_OPEN_STRUCT * leuart_settings);
 void LEUART0_IRQHandler(void);

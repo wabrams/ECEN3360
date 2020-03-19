@@ -1,3 +1,9 @@
+/**
+ * @file leuart.c
+ * @author William Abrams
+ * @date March 8th, 2020
+ * @brief Contains all the functions needed to control LEUART
+ **/
 
 #include <string.h>
 #include <stdbool.h>
@@ -6,14 +12,26 @@
 #include "leuart.h"
 #include "scheduler.h"
 
-static uint32_t	rx_done_evt;
-static uint32_t	tx_done_evt;
+static uint32_t	rx_done_evt;	/**< Scheduler event ID for RX Done event **/
+static uint32_t	tx_done_evt;	/**< Scheduler event ID for TX Done event **/
 
-static leuart_txstate_t txstate = LEUART_STATE_IDLE; //TODO: unused
-static bool leuart0_txbusy = false;
-static char * txstring;
-static uint32_t txcnt = 0;
+static leuart_txstate_t txstate = LEUART_STATE_TX_IDLE; /**< State Machine state variable for transmitting **/
+static bool leuart0_txbusy = false;						/**< Status boolean, acts as weak mutex **/
+static char * txstring;									/**< Pointer, to next char to be transmitted **/
+static uint32_t txcnt = 0;								/**< Counter variable, of characters left to transmit **/
+static bool leuart_tx_dma = false;						/**< TODO: Unused, for future implementation using LDMA **/
+static bool leuart_rx_dma = false;						/**< TODO: Unused, for future implementation using LDMA **/
 
+/**
+ * @brief
+ *	Opener function for LEUART
+ * @details
+ *	Sets up leuart based on leuart_settings, clears TX and RX buffers, enables interrupt handler but not TXBL or TXC
+ * @param[in] leuart
+ *  Pointer to an LEUART peripheral
+ * @param[in] leuart_settings
+ * 	Structure used to pass in all configuration values, see the documentation of LEUART_OPEN_STRUCT for more
+ **/
 void leuart_open(LEUART_TypeDef * leuart, LEUART_OPEN_STRUCT * leuart_settings)
 {
 	// Enable LEUART0 Clock
@@ -43,7 +61,6 @@ void leuart_open(LEUART_TypeDef * leuart, LEUART_OPEN_STRUCT * leuart_settings)
 	leuart_init_s.refFreq  = leuart_settings -> refFreq;
 	leuart_init_s.stopbits = leuart_settings -> stopbits;
 	LEUART_Init(leuart, &leuart_init_s);
-	//MAYBE: see if syncbusy wait is actually needed here (lab says to)
 	while(leuart -> SYNCBUSY);
 
 	// LEUART Routing Setup
@@ -76,13 +93,29 @@ void leuart_open(LEUART_TypeDef * leuart, LEUART_OPEN_STRUCT * leuart_settings)
 	rx_done_evt = leuart_settings -> rx_done_evt;
 	tx_done_evt = leuart_settings -> tx_done_evt;
 
+	// Set State Machine
+	txstate = LEUART_STATE_TX_IDLE;
+
+	// Pass off to DMA
+	leuart_rx_dma = leuart_settings -> rx_dma;
+	leuart_tx_dma = leuart_settings -> tx_dma;
+//TODO:	LEUART_RxDmaInEM2Enable(leuart, leuart_rx_dma);
+//	LEUART_TxDmaInEM2Enable(leuart, leuart_tx_dma);
+
 	// Setup for Interrupts
 	leuart -> IFC = leuart -> IF;
 	leuart -> IEN = (LEUART_IEN_SIGF * leuart_settings -> sigframe_en) | (LEUART_IEN_STARTF * leuart_settings -> startframe_en);
 	if (leuart == LEUART0)
 		NVIC_EnableIRQ(LEUART0_IRQn);
 }
-
+/**
+ * @brief
+ * 	LEUART0's IRQ Handler
+ * @details
+ * 	Clears interrupt flags, handles enabled interrupts
+ * @note
+ * 	Despite containing options for SIGF and STARTF, these are NYI
+ **/
 void LEUART0_IRQHandler(void)
 {
 	__disable_irq();
@@ -93,39 +126,91 @@ void LEUART0_IRQHandler(void)
 	if (iflags & LEUART_IF_STARTF){} //TODO:NYI
 	if (iflags & LEUART_IF_TXBL)
 	{
-		if (txcnt > 0)
+		switch (txstate)
 		{
-			LEUART0 -> TXDATA = txstring[0]; //MAYBE: *txstring
-			txstring++; //slide pointer over
-			txcnt--; //one less char to send
-		}
-		else
-		{
-			LEUART0 -> IEN &= ~LEUART_IEN_TXBL;
-			LEUART0 -> IEN |= LEUART_IEN_TXC;
+			case LEUART_STATE_TX_TRANSMIT:
+				if (txcnt > 0)
+				{
+					LEUART0 -> TXDATA = *txstring;
+					txstring++; //slide pointer over
+					txcnt--; //one less char to send
+				}
+				else
+				{
+					txstate = LEUART_STATE_TX_DONE;
+					LEUART0 -> IEN &= ~LEUART_IEN_TXBL;
+					LEUART0 -> IEN |= LEUART_IEN_TXC;
+				}
+				break;
+			case LEUART_STATE_TX_IDLE:
+			case LEUART_STATE_TX_DONE:
+				EFM_ASSERT(false);
+				break;
+			default: //should never end up here
+				EFM_ASSERT(false);
+				break;
 		}
 	}
 	if (iflags & LEUART_IF_TXC)
 	{
-		sleep_unblock_mode(LEUART_TX_EM);
+		switch (txstate)
+		{
+			case LEUART_STATE_TX_DONE:
+				txstate = LEUART_STATE_TX_IDLE;
+				sleep_unblock_mode(LEUART_TX_EM);
+				leuart0_txbusy = false;
+				add_scheduled_event(tx_done_evt);
+				break;
+			case LEUART_STATE_TX_IDLE:
+			case LEUART_STATE_TX_TRANSMIT:
+				EFM_ASSERT(false);
+				break;
+			default: //should never end up here
+				EFM_ASSERT(false);
+				break;
+		}
 	}
 
 	__enable_irq();
 }
-
+/**
+ * @brief
+ *	Starts a transmission over LEUART
+ * @details
+ *  Blocks sleep, sets the mutex, and begins transmission.
+ * @param[in] leuart
+ *  LEUART peripheral to transmit over
+ * @param[in] string
+ * 	Pointer to the input string (to be transmitted)
+ * @param[in] string_len
+ * 	Length of the input string
+ * @details
+ * 	If string is declared on the stack and not the heap, it will disappear and cause leaurt to transmit incorrectly
+ */
 void leuart_start(LEUART_TypeDef * leuart, char * string, uint32_t string_len)
 {
 	//wait till not busy
 	while(leuart_tx_busy(leuart));
+	leuart0_txbusy = true;
 	//block sleep
 	sleep_block_mode(LEUART_TX_EM);
 	//copy over tx information
 	txstring = string;
 	txcnt = string_len;
+	txstate = LEUART_STATE_TX_TRANSMIT;
 	//enable TXBL (should hit immediately)
 	leuart -> IEN |= LEUART_IEN_TXBL;
 }
 
+/**
+ * @brief
+ *	Simple mutex to check if LEUART peripheral is busy in TX operation
+ * @param[in] leuart
+ * 	Pointer to the LEUART peripheral
+ * @returns
+ * 	Returns true if TX operation already in progress
+ * 	Returns false if TX is idle (not in use)
+ **/
 bool leuart_tx_busy(LEUART_TypeDef * leuart)
 {
 	if (leuart == LEUART0)

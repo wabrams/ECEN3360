@@ -2,12 +2,9 @@
  * @file gpio.h
  **/
 
-//#pragma GCC warning "outside the include guards"
-
 #ifndef GPIO_H
 #define GPIO_H
 
-//#pragma GCC warning "inside the include guards"
 //***********************************************************************************
 // Include files
 //***********************************************************************************
@@ -32,18 +29,11 @@
 	#define SI7021_SENSOR_EN_PORT	gpioPortB	/**< Si7021's EN GPIO Port  **/
 	#define SI7021_SENSOR_EN_PIN	10			/**< Si7021's EN GPIO Pin   **/
 	// LEUART HM10
-	#define LEUART_RX_PORT		gpioPortD
-	#define LEUART_RX_PIN		11
-	#define LEUART_TX_PORT		gpioPortD
-	#define LEUART_TX_PIN		10
-//***********************************************************************************
-// global variables
-//***********************************************************************************
+	#define LEUART_RX_PORT		gpioPortD		/**< HM-10 (BLE) LEUART RX GPIO Port **/
+	#define LEUART_RX_PIN		11				/**< HM-10 (BLE) LEUART RX GPIO Pin **/
+	#define LEUART_TX_PORT		gpioPortD		/**< HM-10 (BLE) LEUART TX GPIO Port **/
+	#define LEUART_TX_PIN		10				/**< HM-10 (BLE) LEUART TX GPIO Pin **/
 
-
-//***********************************************************************************
-// function prototypes
-//***********************************************************************************
 void gpio_open(void);
 
 #endif /* GPIO_H */
