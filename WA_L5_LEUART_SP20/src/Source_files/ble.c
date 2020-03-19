@@ -49,8 +49,8 @@ void ble_open(uint32_t tx_event, uint32_t rx_event)
 	// LEUART DMA
 	leuart_open_s.tx_dma = LEUART_TX_DMA;
 	// LEUART SCHEDULED EVENTS
-	leuart_open_s.rx_done_evt = LEUART_RX_DONE_EVT;
-	leuart_open_s.tx_done_evt = LEUART_TX_DONE_EVT;
+	leuart_open_s.rx_done_evt = rx_event;
+	leuart_open_s.tx_done_evt = tx_event;
 
 	leuart_open(HM10_LEUART0, &leuart_open_s);
 }
