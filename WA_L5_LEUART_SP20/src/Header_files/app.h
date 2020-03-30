@@ -15,7 +15,7 @@
 // Macro Definitions
 //***********************************************************************************
 	// LETIMER0 PWM LED Setup
-		#define	PWM_PER				10.0								/**< PWM period in seconds **/
+		#define	PWM_PER				3.0								/**< PWM period in seconds **/
 		#define	PWM_ACT_PER			0.10							/**< PWM active period in seconds **/
 		#define	LETIMER0_ROUTE_OUT0	LETIMER_ROUTELOC0_OUT0LOC_LOC28	/**< Routing for LETIMER ROUTE OUT0 (to LED0) **/
 		#define	LETIMER0_OUT0_EN	false							/**< set to true for LED0 to blink, false for off **/
