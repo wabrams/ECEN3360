@@ -83,7 +83,12 @@
 	void i2c_open(I2C_TypeDef *, I2C_OPEN_STRUCT *, I2C_IO_STRUCT *);
 	void i2c_bus_reset(I2C_TypeDef *, I2C_IO_STRUCT *);
 	void i2c_start(I2C_TypeDef *, I2C_PAYLOAD_STRUCT *);
-
+	// LPM
+	void i2c_enable_interrupts(I2C_TypeDef *, I2C_IO_STRUCT *);
+	void i2c_disable_interrupts(I2C_TypeDef *);
+	void i2c_enable_bussigs(I2C_TypeDef *);
+	void i2c_disable_bussigs(I2C_TypeDef *);
+	// IRQ
 	void I2C0_IRQHandler(void);
 	void I2C1_IRQHandler(void);
 

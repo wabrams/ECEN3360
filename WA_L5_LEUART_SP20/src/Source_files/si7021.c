@@ -61,6 +61,31 @@ void si7021_i2c_start()
 	i2c_start(SI7021_I2C, &i2c_pl_s);
 }
 
+void si7021_lpm_enable()
+{
+	// Turn On Power
+	GPIO_PinModeSet(SI7021_SENSOR_EN_PORT, SI7021_SENSOR_EN_PIN, gpioModePushPull, true);
+	//TODO: wait for bootup delay
+	// Engage GPIO
+	GPIO_PinModeSet(SI7021_SCL_PORT, SI7021_SCL_PIN, gpioModeWiredAnd, true);
+	GPIO_PinModeSet(SI7021_SDA_PORT, SI7021_SDA_PIN, gpioModeWiredAnd, true);
+	// Engage Peripheral
+	i2c_enable_bussigs(SI7021_I2C);
+//	i2c_enable_interrupts(SI7021_I2C);
+}
+
+void si7021_lpm_disable()
+{
+	// Disengage Peripheral
+	i2c_disable_interrupts(SI7021_I2C);
+	i2c_disable_bussigs(SI7021_I2C);
+	// Disengage GPIO
+	GPIO_PinModeSet(SI7021_SCL_PORT, SI7021_SCL_PIN, gpioModeDisabled, false);
+	GPIO_PinModeSet(SI7021_SDA_PORT, SI7021_SDA_PIN, gpioModeDisabled, false);
+	// Turn Off Power
+	GPIO_PinModeSet(SI7021_SENSOR_EN_PORT, SI7021_SENSOR_EN_PIN, gpioModeDisabled, false);
+}
+
 /**
  * @brief
  *	Getter for the Si7021's temperature reading, in Celsius

@@ -9,7 +9,7 @@
 #include "sleep_routines.h"
 
 #define LEUART_TX_EM EM3 	/**< lowest energy mode LEUART can TX in **/
-#define LEUART_RX_EM EM4	/**< lowest energy mode LEUART can RX in **/
+#define LEUART_RX_EM EM3	/**< lowest energy mode LEUART can RX in **/
 
 /**
  * @brief

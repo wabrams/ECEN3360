@@ -4,6 +4,7 @@
 
 #ifndef BLE_H
 #define BLE_H
+//#define BLE_TEST_ENABLED
 
 #include <stdbool.h>
 #include <stdint.h>

@@ -179,5 +179,8 @@ void scheduled_boot_up_evt(void)
 {
 	remove_scheduled_event(BOOT_UP_EVT);
 	letimer_start(LETIMER0, true);
-//	EFM_ASSERT(ble_test("WA-PG12"));
+	#ifdef BLE_TEST_ENABLED
+		EFM_ASSERT(ble_test("WA-PG12"));
+		for (int i = 0; i < 20000000; i++);
+	#endif
 }

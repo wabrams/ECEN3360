@@ -120,6 +120,38 @@ void i2c_start(I2C_TypeDef * i2c, I2C_PAYLOAD_STRUCT * i2c_pl_s)
 	i2c -> TXDATA = (i2c_payload_s -> dev_addr << 1) | I2C_DIR_WRITE;
 }
 
+void i2c_enable_interrupts(I2C_TypeDef * i2c, I2C_IO_STRUCT * i2c_io_s)
+{
+	//reset the bus
+	i2c_bus_reset(i2c, i2c_io_s);
+	//enable interrupts
+	if (i2c == I2C0)
+		NVIC_EnableIRQ(I2C0_IRQn);
+	else if (i2c == I2C1)
+		NVIC_EnableIRQ(I2C1_IRQn);
+//	else
+//		EFM_ASSERT(false);
+}
+void i2c_disable_interrupts(I2C_TypeDef * i2c)
+{
+	//disable interrupts
+	if (i2c == I2C0)
+		NVIC_DisableIRQ(I2C0_IRQn);
+	else if (i2c == I2C1)
+		NVIC_DisableIRQ(I2C1_IRQn);
+//	else
+//		EFM_ASSERT(false);
+	//clear the bus (optional, unimplemented (doesn't matter for disabling))
+}
+void i2c_enable_bussigs(I2C_TypeDef * i2c)
+{
+	i2c -> ROUTEPEN |= I2C_ROUTEPEN_SCLPEN | I2C_ROUTEPEN_SDAPEN;
+}
+void i2c_disable_bussigs(I2C_TypeDef * i2c)
+{
+	i2c -> ROUTEPEN &= ~(I2C_ROUTEPEN_SCLPEN |  I2C_ROUTEPEN_SDAPEN);
+}
+
 /**
  * @brief
  *	ACK Handler function for I2Cn IRQHandler
