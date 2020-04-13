@@ -10,6 +10,28 @@
 #include "leuart.h"
 #include <string.h>
 
+static BLE_CIRCULAR_BUF ble_cbuf;
+static CIRC_TEST_STRUCT test_struct;
+static char ble_tx_string[16];
+
+static inline bool ble_circ_isEmpty(void)
+{
+	return (ble_cbuf.read_ptr == ble_cbuf.write_ptr);
+}
+static inline uint8_t ble_circ_space(void)
+{
+	return CSIZE - ((ble_cbuf.write_ptr - ble_cbuf.read_ptr) & ble_cbuf.size_mask);
+}
+static inline void update_circ_wrtindex(BLE_CIRCULAR_BUF * index_struct, uint32_t update_by)
+{
+	index_struct -> write_ptr = (index_struct -> write_ptr + update_by) & index_struct -> size_mask;
+}
+static inline void update_circ_readindex(BLE_CIRCULAR_BUF * index_struct, uint32_t update_by)
+{
+	index_struct -> read_ptr = (index_struct -> read_ptr + update_by) & index_struct -> size_mask;
+}
+
+
 /**
  * @brief
  *
@@ -51,6 +73,7 @@ void ble_open(uint32_t tx_event, uint32_t rx_event)
 	leuart_open_s.rx_done_evt = rx_event;
 	leuart_open_s.tx_done_evt = tx_event;
 
+	ble_circ_init();
 	leuart_open(HM10_LEUART0, &leuart_open_s);
 }
 
@@ -64,8 +87,9 @@ void ble_open(uint32_t tx_event, uint32_t rx_event)
  **/
 void ble_write(char * string)
 {
-	//MAYBE: app should call this and this should copy and "store the string"
-	leuart_start(HM10_LEUART0, string, strlen(string));
+	ble_circ_push(string);
+	if (!leuart_tx_busy(HM10_LEUART0))
+		ble_circ_pop(false);
 }
 
 /**
@@ -213,5 +237,153 @@ bool ble_test(char * mod_name)
 
 	__enable_irq();
 
+	return true;
+}
+void ble_circ_init(void)
+{
+	ble_cbuf.read_ptr = ble_cbuf.write_ptr = 0;
+	ble_cbuf.size = CSIZE; //MUST BE POWER OF 2
+	ble_cbuf.size_mask = CSIZE - 1;
+}
+void ble_circ_push(char * string)
+{
+	EFM_ASSERT(ble_circ_space());
+
+	uint8_t len = strlen(string);
+	//ROOM FOR PACKET?
+	if ((len + 1) <= ble_circ_space())
+	{
+		//PACKET HEADER
+		ble_cbuf.cbuf[ble_cbuf.write_ptr] = (char) len;
+		update_circ_wrtindex(&ble_cbuf, 1);
+		//PACKET BODY
+		for (int i = 0; i < len; i++)
+		{
+			ble_cbuf.cbuf[ble_cbuf.write_ptr] = string[i];
+			update_circ_wrtindex(&ble_cbuf, 1);
+		}
+	}
+	else
+	{
+		EFM_ASSERT(false);
+	}
+}
+void circular_buff_test(void)
+{
+	 bool buff_empty;
+	 int test1_len = 50;
+	 int test2_len = 25;
+	 int test3_len = 5;
+
+	 // Why this 0 initialize of read and write pointer?
+	 // Student Response:
+	 //
+	 ble_cbuf.read_ptr = 0;
+	 ble_cbuf.write_ptr = 0;
+
+	 // Why do none of these test strings contain a 0?
+	 // Student Response:
+	 //
+	 for (int i = 0;i < test1_len; i++){
+		 test_struct.test_str[0][i] = i+1;
+	 }
+	 for (int i = 0;i < test2_len; i++){
+		 test_struct.test_str[1][i] = i + 20;
+	 }
+	 for (int i = 0;i < test3_len; i++){
+		 test_struct.test_str[2][i] = i +  35;
+	 }
+
+	 // Why is there only one push to the circular buffer at this stage of the test
+	 // Student Response:
+	 //
+	 ble_circ_push(&test_struct.test_str[0][0]);
+
+	 // Why is the expected buff_empty test = false?
+	 // Student Response:
+	 //
+
+	 buff_empty = ble_circ_pop(CIRC_TEST);
+	 EFM_ASSERT(buff_empty == false);
+	 for (int i = 0; i < test1_len; i++){
+		 EFM_ASSERT(test_struct.test_str[0][i] == test_struct.result_str[i]);
+	 }
+
+	 // What does this next push on the circular buffer test?
+	 // Student Response:
+
+	 ble_circ_push(&test_struct.test_str[1][0]);
+
+	 // What does this next push on the circular buffer test?
+	 // Student Response:
+	 ble_circ_push(&test_struct.test_str[2][0]);
+
+
+	 // Why is the expected buff_empty test = false?
+	 // Student Response:
+	 //
+	 buff_empty = ble_circ_pop(CIRC_TEST);
+	 EFM_ASSERT(buff_empty == false);
+	 for (int i = 0; i < test2_len; i++){
+		 EFM_ASSERT(test_struct.test_str[1][i] == test_struct.result_str[i]);
+	 }
+
+	 // Why is the expected buff_empty test = false?
+	 // Student Response:
+	 //
+	 buff_empty = ble_circ_pop(CIRC_TEST);
+	 EFM_ASSERT(buff_empty == false);
+	 for (int i = 0; i < test3_len; i++){
+		 EFM_ASSERT(test_struct.test_str[2][i] == test_struct.result_str[i]);
+	 }
+
+	 // Using these three writes and pops to the circular buffer, what other test
+	 // could we develop to better test out the circular buffer?
+	 // Student Response:
+
+
+	 // Why is the expected buff_empty test = true?
+	 // Student Response:
+	 //
+	 buff_empty = ble_circ_pop(CIRC_TEST);
+	 EFM_ASSERT(buff_empty == true);
+	 ble_write("\nPassed Circular Buffer Test\n");
+
+}
+
+bool ble_circ_pop(bool test)
+{
+	if (!ble_circ_isEmpty())
+	{
+		if (test)
+		{
+			uint8_t len = (uint8_t)ble_cbuf.cbuf[ble_cbuf.read_ptr];
+			update_circ_readindex(&ble_cbuf, 1);
+			for (int i = 0; i < len; i++)
+			{
+				test_struct.result_str[i] = ble_cbuf.cbuf[ble_cbuf.read_ptr];
+				update_circ_readindex(&ble_cbuf, 1);
+			}
+			return false;
+		}
+		else
+		{
+			uint8_t len = (uint8_t)ble_cbuf.cbuf[ble_cbuf.read_ptr];
+			if (len + 1 <= BLE_STR_SIZE)
+			{
+				update_circ_readindex(&ble_cbuf, 1);
+				for (int i = 0; i < len; i++)
+				{
+					ble_tx_string[i] = ble_cbuf.cbuf[ble_cbuf.read_ptr];
+					update_circ_readindex(&ble_cbuf, 1);
+				}
+				ble_tx_string[len] = '\0';
+				leuart_start(HM10_LEUART0, ble_tx_string, len);
+				return false;
+			}
+			else
+				EFM_ASSERT(false);
+		}
+	}
 	return true;
 }
