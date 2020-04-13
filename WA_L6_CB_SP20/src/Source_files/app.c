@@ -164,6 +164,7 @@ void scheduled_leuart_rx_done_evt(void)
  **/
 void scheduled_leuart_tx_done_evt(void)
 {
+	ble_circ_pop(false);
 	remove_scheduled_event(LEUART_TX_DONE_EVT);
 }
 /**
@@ -181,9 +182,9 @@ void scheduled_boot_up_evt(void)
 		EFM_ASSERT(ble_test("WA-PG12"));
 		for (int i = 0; i < 20000000; i++);
 	#endif
-//	circular_buff_test();
-//	ble_write("\nHello World\n");
-//	ble_write("ADC Lab: ");
-//	ble_write("WAbrams\n");
+	circular_buff_test();
+	ble_write("\nHello World\n");
+	ble_write("ADC Lab: ");
+	ble_write("WAbrams\n");
 	letimer_start(LETIMER0, true);
 }

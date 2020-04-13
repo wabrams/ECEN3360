@@ -12,7 +12,7 @@
 
 static BLE_CIRCULAR_BUF ble_cbuf;
 static CIRC_TEST_STRUCT test_struct;
-static char ble_tx_string[16];
+static char ble_tx_string[BLE_STR_SIZE];
 
 static inline bool ble_circ_isEmpty(void)
 {
@@ -276,13 +276,13 @@ void circular_buff_test(void)
 	 int test3_len = 5;
 
 	 // Why this 0 initialize of read and write pointer?
-	 // Student Response:
+	 // Student Response: because we want the buffer to be empty (ridx = widx)
 	 //
 	 ble_cbuf.read_ptr = 0;
 	 ble_cbuf.write_ptr = 0;
 
 	 // Why do none of these test strings contain a 0?
-	 // Student Response:
+	 // Student Response: two reasons: 1) none of the for loops allow 0 to be a value (+1, +20, +35) but the real reason is 2) the ASCII character 00000000 is a NULL character and we never want to see this
 	 //
 	 for (int i = 0;i < test1_len; i++){
 		 test_struct.test_str[0][i] = i+1;
@@ -295,13 +295,11 @@ void circular_buff_test(void)
 	 }
 
 	 // Why is there only one push to the circular buffer at this stage of the test
-	 // Student Response:
-	 //
+	 // Student Response: because we're just testing one string
 	 ble_circ_push(&test_struct.test_str[0][0]);
 
 	 // Why is the expected buff_empty test = false?
-	 // Student Response:
-	 //
+	 // Student Response: because we are popping off a string and the buffer is NOT empty, we should expect a value of false
 
 	 buff_empty = ble_circ_pop(CIRC_TEST);
 	 EFM_ASSERT(buff_empty == false);
@@ -310,18 +308,17 @@ void circular_buff_test(void)
 	 }
 
 	 // What does this next push on the circular buffer test?
-	 // Student Response:
+	 // Student Response: we're testing the second string (with a different length)
 
 	 ble_circ_push(&test_struct.test_str[1][0]);
 
 	 // What does this next push on the circular buffer test?
-	 // Student Response:
+	 // Student Response: we're testing the third string (with yet another different length)
 	 ble_circ_push(&test_struct.test_str[2][0]);
 
 
 	 // Why is the expected buff_empty test = false?
-	 // Student Response:
-	 //
+	 // Student Response: because the circular buffer is not empty
 	 buff_empty = ble_circ_pop(CIRC_TEST);
 	 EFM_ASSERT(buff_empty == false);
 	 for (int i = 0; i < test2_len; i++){
@@ -329,8 +326,7 @@ void circular_buff_test(void)
 	 }
 
 	 // Why is the expected buff_empty test = false?
-	 // Student Response:
-	 //
+	 // Student Response: because the circular buffer is not empty
 	 buff_empty = ble_circ_pop(CIRC_TEST);
 	 EFM_ASSERT(buff_empty == false);
 	 for (int i = 0; i < test3_len; i++){
@@ -339,12 +335,10 @@ void circular_buff_test(void)
 
 	 // Using these three writes and pops to the circular buffer, what other test
 	 // could we develop to better test out the circular buffer?
-	 // Student Response:
-
+	 // Student Response: we could develop an overflow test (overfill the buffer), or an underflow test (empty string on, length 0), or an overwrite test (if our structure supports it)
 
 	 // Why is the expected buff_empty test = true?
-	 // Student Response:
-	 //
+	 // Student Response: because the circular buffer is empty at this point, it will not be able to pop
 	 buff_empty = ble_circ_pop(CIRC_TEST);
 	 EFM_ASSERT(buff_empty == true);
 	 ble_write("\nPassed Circular Buffer Test\n");
