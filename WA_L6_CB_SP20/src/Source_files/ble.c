@@ -10,22 +10,52 @@
 #include "leuart.h"
 #include <string.h>
 
-static BLE_CIRCULAR_BUF ble_cbuf;
-static CIRC_TEST_STRUCT test_struct;
-static char ble_tx_string[BLE_STR_SIZE];
+static BLE_CIRCULAR_BUF ble_cbuf;				/**< circular buffer struct for ble.c **/
+static CIRC_TEST_STRUCT test_struct;			/**< circular buffer test struct for the TDD routine **/
+static char ble_tx_string[BLE_STR_SIZE];		/**< ble string currently being transmitted by LEUART **/
 
+/**
+ * @brief
+ * 	checks if the circular buffer ble_cbuf is empty
+ * @details
+ *	compares the read and write indeces, if they are equal the buffer is empty
+**/
 static inline bool ble_circ_isEmpty(void)
 {
 	return (ble_cbuf.read_ptr == ble_cbuf.write_ptr);
 }
-static inline uint8_t ble_circ_space(void)
+/**
+ * @brief
+ * 	checks the amount of free space in the circular buffer
+ * @details
+ *	gets the difference between write and read indeces, wraps them to a valid value (0, size), and returns size - occupied
+ * @note
+ *  does not account for the "bubble" due to the architecture limitation, so will always stop at 1.
+**/
+static inline uint32_t ble_circ_space(void)
 {
 	return CSIZE - ((ble_cbuf.write_ptr - ble_cbuf.read_ptr) & ble_cbuf.size_mask);
 }
+/**
+ * @brief
+ * 	updates the circular buffer's write index safely
+ * @details
+ * 	adds update_by to index_struct's write_ptr and then masks it to not oob
+ * @note
+ * 	bypasses modulo math by using bitwise and with the mask
+**/
 static inline void update_circ_wrtindex(BLE_CIRCULAR_BUF * index_struct, uint32_t update_by)
 {
 	index_struct -> write_ptr = (index_struct -> write_ptr + update_by) & index_struct -> size_mask;
 }
+/**
+ * @brief
+ * 	updates the circular buffer's read index safely
+ * @details
+ * 	adds update_by to index_struct's read_ptr and then masks it to not oob
+ * @note
+ * 	bypasses modulo math by using bitwise and with the mask
+**/
 static inline void update_circ_readindex(BLE_CIRCULAR_BUF * index_struct, uint32_t update_by)
 {
 	index_struct -> read_ptr = (index_struct -> read_ptr + update_by) & index_struct -> size_mask;
@@ -34,14 +64,14 @@ static inline void update_circ_readindex(BLE_CIRCULAR_BUF * index_struct, uint32
 
 /**
  * @brief
- *
+ *	sets up BLE to control LEUART for the HM10 module
  * @details
- *
+ *	initializes circular buffer and HM10_LEUART
  * @param[in] tx_event
- *
+ *	scheduler event ID for transmit complete
  * @param[in] rx_event
- *
- **/
+ *	scheduler event ID for receive complete
+**/
 void ble_open(uint32_t tx_event, uint32_t rx_event)
 {
 	LEUART_OPEN_STRUCT leuart_open_s;
@@ -88,8 +118,7 @@ void ble_open(uint32_t tx_event, uint32_t rx_event)
 void ble_write(char * string)
 {
 	ble_circ_push(string);
-	if (!leuart_tx_busy(HM10_LEUART0))
-		ble_circ_pop(false);
+	ble_circ_pop(false);
 }
 
 /**
@@ -239,12 +268,26 @@ bool ble_test(char * mod_name)
 
 	return true;
 }
+/**
+ * @brief
+ * 	initializes the private circular buffer for ble.c
+ * @details
+ * 	sets the read and write pointers to 0, sets the size, creates the mask
+**/
 void ble_circ_init(void)
 {
 	ble_cbuf.read_ptr = ble_cbuf.write_ptr = 0;
 	ble_cbuf.size = CSIZE; //MUST BE POWER OF 2
 	ble_cbuf.size_mask = CSIZE - 1;
 }
+/**
+ * @brief
+ *	pushes a string onto the circular buffer
+ * @details
+ * 	checks if there is room for the packet, then copies the data into the circular buffer
+ * @param[in] string
+ * 	the string to be pushed onto the buffer
+**/
 void ble_circ_push(char * string)
 {
 	EFM_ASSERT(ble_circ_space());
@@ -268,6 +311,12 @@ void ble_circ_push(char * string)
 		EFM_ASSERT(false);
 	}
 }
+/**
+ * @brief
+ * 	TDD routine for the circular buffer
+ * @details
+ * 	uses test_struct and ble_cbuf, this should be called before ble is used for reads / writes
+**/
 void circular_buff_test(void)
 {
 	 bool buff_empty;
@@ -342,9 +391,15 @@ void circular_buff_test(void)
 	 buff_empty = ble_circ_pop(CIRC_TEST);
 	 EFM_ASSERT(buff_empty == true);
 	 ble_write("\nPassed Circular Buffer Test\n");
-
 }
-
+/**
+ * @brief
+ *	pops a string off of the circular buffer, either to the test_struct or to LEUART (via ble_tx_string)
+ * @details
+ *	checks if the buffer is empty, attempts to pop (depending on the size of the packet and if there is room)
+ * @param[in] test
+ *	boolean indicating if we are calling a test pop (for TDD) or not
+**/
 bool ble_circ_pop(bool test)
 {
 	if (!ble_circ_isEmpty())
@@ -360,7 +415,7 @@ bool ble_circ_pop(bool test)
 			}
 			return false;
 		}
-		else
+		else if (!leuart_tx_busy(HM10_LEUART0))
 		{
 			uint8_t len = (uint8_t)ble_cbuf.cbuf[ble_cbuf.read_ptr];
 			if (len + 1 <= BLE_STR_SIZE)

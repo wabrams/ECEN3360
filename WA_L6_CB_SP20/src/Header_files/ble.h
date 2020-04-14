@@ -12,24 +12,32 @@
 #include "leuart.h"
 #include "em_leuart.h"
 
-#define CIRC_TEST true
-#define CIRC_OPER false
-#define CSIZE 128
-#define BLE_STR_SIZE 32
+#define CIRC_TEST true			/**< boolean value indicating if the call to pop is for TDD or not **/
+#define CIRC_TEST_SIZE 3		/**< number of test strings, used for the CIRC_TEST_STRUCT **/
+#define CSIZE 128				/**< number of characters in the circular buffer (usable is 1 less) **/
+#define BLE_STR_SIZE 32			/**< size of the ble tx string for LEUART (LEUART receives a pointer of this) **/
+
+/**
+ * @brief
+ * Structure used to hold information for BLE (FIFO of strings to write over UART)
+ **/
 typedef struct
 {
-	char	cbuf[CSIZE];
-	uint8_t	size_mask;
-	uint32_t size;
-	uint32_t read_ptr;
-	uint32_t write_ptr;
+	char	cbuf[CSIZE];		/**< char array for the circular buffer **/
+	uint8_t	size_mask;			/**< mask, based on the size (relies on power of 2 math) **/
+	uint32_t size;				/**< size of the circular buffer, MUST BE POWER OF 2 **/
+	uint32_t read_ptr;			/**< read index between 0 and size **/
+	uint32_t write_ptr;			/**< write index between 0 and size **/
 } BLE_CIRCULAR_BUF;
 
-#define CIRC_TEST_SIZE 3
+/**
+ * @brief
+ * Structure used to test BLE CB
+ **/
 typedef struct
 {
-	char test_str[CIRC_TEST_SIZE][CSIZE];
-	char result_str[CSIZE];
+	char test_str[CIRC_TEST_SIZE][CSIZE];	/**< array of strings for test struct **/
+	char result_str[CSIZE];					/**< result string used for test struct **/
 } CIRC_TEST_STRUCT;
 
 void ble_circ_init(void);
