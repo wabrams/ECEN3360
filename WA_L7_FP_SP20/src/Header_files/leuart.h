@@ -22,6 +22,12 @@ typedef enum
 	LEUART_STATE_TX_DONE,			/**< completed state **/
 } leuart_txstate_t;
 
+typedef enum
+{
+	LEUART_STATE_RX_IDLE,
+	LEUART_STATE_RX_RECEIVE,
+} leuart_rxstate_t;
+
 /**
  * @brief
  * Structure used for leuart_open() to pass all relevant values
@@ -50,6 +56,9 @@ typedef struct
 	char						startframe;		/**< LEUART STARTF character (8 bit only) **/
 	bool						sigframe_en;	/**< LEUART SIGF enable **/
 	char						sigframe;		/**< LEUART SIGF character (8 bit only) **/
+	// RX
+	int							rxlen;
+	char *						rxstring;
 	// DMA
 	bool 						rx_dma;			/**< TODO: Unused. Enables RX DMA in EM2 **/
 	bool 						tx_dma;			/**< TODO: Unused. Enables TX DMA in EM2 **/

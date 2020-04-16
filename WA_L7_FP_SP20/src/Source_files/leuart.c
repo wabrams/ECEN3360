@@ -19,6 +19,14 @@ static leuart_txstate_t txstate = LEUART_STATE_TX_IDLE; /**< State Machine state
 static bool leuart0_txbusy = false;						/**< Status boolean, acts as weak mutex **/
 static char * txstring;									/**< Pointer, to next char to be transmitted **/
 static uint32_t txcnt = 0;								/**< Counter variable, of characters left to transmit **/
+
+
+static leuart_rxstate_t rxstate = LEUART_STATE_RX_IDLE;
+static char * rxstring;
+static uint32_t rxlen;
+static uint32_t rxcnt = 0;
+
+
 static bool leuart_tx_dma = false;						/**< TODO: Unused, for future implementation using LDMA **/
 static bool leuart_rx_dma = false;						/**< TODO: Unused, for future implementation using LDMA **/
 
@@ -67,9 +75,15 @@ void leuart_open(LEUART_TypeDef * leuart, LEUART_OPEN_STRUCT * leuart_settings)
 	leuart -> ROUTELOC0 = leuart_settings -> rx_rloc | leuart_settings -> tx_rloc;
 	leuart -> ROUTEPEN = leuart_settings -> rx_rpen | leuart_settings -> tx_rpen;
 
+	// RX STRING
+	sleep_block_mode(LEUART_RX_EM_BLOCK); //FIXME: this should not be done here
+	rxstring = leuart_settings -> rxstring;
+	rxlen = leuart_settings -> rxlen;
+
 	// MISC Setup
 	leuart -> CMD = (LEUART_CMD_RXBLOCKEN * leuart_settings -> rxblocken);
-	leuart -> CTRL = leuart_settings -> sfubrx * LEUART_CTRL_SFUBRX;
+	while (leuart -> SYNCBUSY);
+	leuart -> CTRL |= leuart_settings -> sfubrx * LEUART_CTRL_SFUBRX;
 
 	// Setup for Start Frame
 	leuart -> STARTFRAME = leuart_settings -> startframe;
@@ -95,6 +109,7 @@ void leuart_open(LEUART_TypeDef * leuart, LEUART_OPEN_STRUCT * leuart_settings)
 
 	// Set State Machine
 	txstate = LEUART_STATE_TX_IDLE;
+	rxstate = LEUART_STATE_RX_IDLE;
 
 	// Pass off to DMA
 	leuart_rx_dma = leuart_settings -> rx_dma;
@@ -121,9 +136,56 @@ void LEUART0_IRQHandler(void)
 	__disable_irq();
 
 	uint32_t iflags = (LEUART0 -> IFC = LEUART0 -> IF) & LEUART0 -> IEN;
-
-	if (iflags & LEUART_IF_SIGF){} //TODO: NYI
-	if (iflags & LEUART_IF_STARTF){} //TODO:NYI
+	//TODO: finish these
+	if (iflags & LEUART_IF_SIGF)
+	{
+		switch (rxstate)
+		{
+			case LEUART_STATE_RX_IDLE:
+				EFM_ASSERT(false);
+				break;
+			case LEUART_STATE_RX_RECEIVE:
+				//done reading:
+				LEUART0 -> IEN &= ~LEUART_IEN_RXDATAV;
+				rxstate = LEUART_STATE_RX_IDLE;
+				add_scheduled_event(rx_done_evt);
+				//TODO: should be unblocking sleep here, and app should call ble_enableCMD() which will reblock all of these, but eh
+				LEUART0 -> CMD = LEUART_CMD_RXBLOCKEN;
+				LEUART0 -> CTRL |= LEUART_CTRL_SFUBRX;
+				//TODO: SYNCBUSY?
+				break;
+			default:
+				EFM_ASSERT(false);
+		}
+	}
+	if (iflags & LEUART_IF_STARTF)
+	{
+		switch (rxstate)
+		{
+			case LEUART_STATE_RX_IDLE:
+				LEUART0 -> IEN |= LEUART_IEN_RXDATAV;
+				rxcnt = 0;
+				rxstate = LEUART_STATE_RX_RECEIVE;
+				break;
+			case LEUART_STATE_RX_RECEIVE:
+				rxcnt = 0;
+				break;
+			default:
+				EFM_ASSERT(false);
+				break;
+		}
+	}
+	if (iflags & LEUART_IF_RXDATAV)
+	{
+		rxstring[rxcnt] = LEUART0 -> RXDATA;
+		rxcnt++;
+		//rxcnt is valid from 0 to rxlen - 1
+		if (rxcnt >= rxlen)
+		{
+			//TODO: sfubrx, rxblocken
+			//TODO: add scheduled event
+		}
+	}
 	if (iflags & LEUART_IF_TXBL)
 	{
 		switch (txstate)
@@ -216,6 +278,11 @@ bool leuart_tx_busy(LEUART_TypeDef * leuart)
 	if (leuart == LEUART0)
 		return leuart0_txbusy;
 	return true;
+}
+
+bool leaurt_rx_busy()
+{
+	return !(rxstate == LEUART_STATE_RX_IDLE);
 }
 
 /**
