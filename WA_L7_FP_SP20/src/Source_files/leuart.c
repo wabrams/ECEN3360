@@ -12,11 +12,11 @@
 #include "leuart.h"
 #include "scheduler.h"
 
-static uint32_t	rx_done_evt;	/**< Scheduler event ID for RX Done event **/
-static uint32_t	tx_done_evt;	/**< Scheduler event ID for TX Done event **/
+static uint32_t * rx_done_evt;	/**< Scheduler event ID for RX Done event **/
+static uint32_t	* tx_done_evt;	/**< Scheduler event ID for TX Done event **/
 
 static leuart_txstate_t txstate = LEUART_STATE_TX_IDLE; /**< State Machine state variable for transmitting **/
-static bool leuart0_txbusy = false;						/**< Status boolean, acts as weak mutex **/
+static volatile bool leuart0_txbusy = false;						/**< Status boolean, acts as weak mutex **/
 static char * txstring;									/**< Pointer, to next char to be transmitted **/
 static uint32_t txcnt = 0;								/**< Counter variable, of characters left to transmit **/
 
@@ -118,8 +118,8 @@ void leuart_open(LEUART_TypeDef * leuart, LEUART_OPEN_STRUCT * leuart_settings)
 //	LEUART_TxDmaInEM2Enable(leuart, leuart_tx_dma);
 
 	// Setup for Interrupts
-	leuart -> IFC = leuart -> IF;
-	leuart -> IEN = (LEUART_IEN_SIGF * leuart_settings -> sigframe_en) | (LEUART_IEN_STARTF * leuart_settings -> startframe_en);
+	leuart -> IFC = leuart -> IF; //TODO: no sigf interrupt until startf
+	leuart -> IEN = (LEUART_IEN_STARTF * leuart_settings -> startframe_en) | (LEUART_IEN_RXDATAV * leuart_settings -> rxdatav_en);
 	if (leuart == LEUART0)
 		NVIC_EnableIRQ(LEUART0_IRQn);
 }
@@ -137,37 +137,18 @@ void LEUART0_IRQHandler(void)
 
 	uint32_t iflags = (LEUART0 -> IFC = LEUART0 -> IF) & LEUART0 -> IEN;
 	//TODO: finish these
-	if (iflags & LEUART_IF_SIGF)
-	{
-		switch (rxstate)
-		{
-			case LEUART_STATE_RX_IDLE:
-				EFM_ASSERT(false);
-				break;
-			case LEUART_STATE_RX_RECEIVE:
-				//done reading:
-				LEUART0 -> IEN &= ~LEUART_IEN_RXDATAV;
-				rxstate = LEUART_STATE_RX_IDLE;
-				add_scheduled_event(rx_done_evt);
-				//TODO: should be unblocking sleep here, and app should call ble_enableCMD() which will reblock all of these, but eh
-				LEUART0 -> CMD = LEUART_CMD_RXBLOCKEN;
-				LEUART0 -> CTRL |= LEUART_CTRL_SFUBRX;
-				//TODO: SYNCBUSY?
-				break;
-			default:
-				EFM_ASSERT(false);
-		}
-	}
 	if (iflags & LEUART_IF_STARTF)
 	{
 		switch (rxstate)
 		{
 			case LEUART_STATE_RX_IDLE:
-				LEUART0 -> IEN |= LEUART_IEN_RXDATAV;
+				memset(rxstring,0,rxlen); //purge all rx data
 				rxcnt = 0;
 				rxstate = LEUART_STATE_RX_RECEIVE;
+				LEUART0 -> IEN |= LEUART_IEN_SIGF;
 				break;
 			case LEUART_STATE_RX_RECEIVE:
+				memset(rxstring,0,rxlen); //purge all rx data
 				rxcnt = 0;
 				break;
 			default:
@@ -177,13 +158,38 @@ void LEUART0_IRQHandler(void)
 	}
 	if (iflags & LEUART_IF_RXDATAV)
 	{
-		rxstring[rxcnt] = LEUART0 -> RXDATA;
-		rxcnt++;
-		//rxcnt is valid from 0 to rxlen - 1
-		if (rxcnt >= rxlen)
+		switch (rxstate)
 		{
-			//TODO: sfubrx, rxblocken
-			//TODO: add scheduled event
+			case LEUART_STATE_RX_IDLE:
+				EFM_ASSERT(false);
+				break;
+			case LEUART_STATE_RX_RECEIVE:
+				rxstring[rxcnt] = LEUART0 -> RXDATA;
+				rxcnt++;
+				//rxcnt is valid from 0 to rxlen - 1
+				if (rxcnt >= rxlen)
+					rxcnt = 1;
+				break;
+			default:
+				EFM_ASSERT(false);
+		}
+	}
+	if (iflags & LEUART_IF_SIGF)
+	{
+		switch (rxstate)
+		{
+			case LEUART_STATE_RX_IDLE:
+				EFM_ASSERT(false);
+				break;
+			case LEUART_STATE_RX_RECEIVE:
+				//done reading:
+				LEUART0 -> CMD = LEUART_CMD_RXBLOCKEN | LEUART_CMD_CLEARRX;
+				LEUART0 -> IEN &= ~LEUART_IEN_SIGF;
+				rxstate = LEUART_STATE_RX_IDLE;
+				add_scheduled_event(*rx_done_evt);
+				break;
+			default:
+				EFM_ASSERT(false);
 		}
 	}
 	if (iflags & LEUART_IF_TXBL)
@@ -219,9 +225,9 @@ void LEUART0_IRQHandler(void)
 		{
 			case LEUART_STATE_TX_DONE:
 				txstate = LEUART_STATE_TX_IDLE;
-				sleep_unblock_mode(LEUART_TX_EM_BLOCK);
+				sleep_unblock_mode(LEUART_RX_EM_BLOCK);
 				leuart0_txbusy = false;
-				add_scheduled_event(tx_done_evt);
+				add_scheduled_event(*tx_done_evt);
 				break;
 			case LEUART_STATE_TX_IDLE:
 			case LEUART_STATE_TX_TRANSMIT:

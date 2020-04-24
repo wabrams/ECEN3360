@@ -32,14 +32,15 @@
 		#define LEUART_TX_DONE_EVT		0x00000020 /**< Scheduler Event ID for LEUART0_TX_DONE_EVT **/
 		#define BOOT_UP_EVT				0x80000000 /**< Scheduler Event ID for BOOT_UP_EVT (MAX)   **/
 
-		#define APP_CMD_TEMPC "<tempC>"
+		#define APP_CMD_TEMPK "<tempK>"
 		#define APP_CMD_TEMPF "<tempF>"
+		#define APP_CMD_TEMPC "<tempC>"
 
 	typedef enum
 	{
 		degreesC,
 		degreesF,
-//		degreesK
+		degreesK
 	} temp_mode_t;
 
 //	typedef enum

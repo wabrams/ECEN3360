@@ -54,7 +54,7 @@ typedef struct
 	bool						sfubrx;			/**< LEUART StartF UnBlock RX **/
 	bool						startframe_en;	/**< LEUART STARTF enable **/
 	char						startframe;		/**< LEUART STARTF character (8 bit only) **/
-	bool						sigframe_en;	/**< LEUART SIGF enable **/
+	bool						rxdatav_en;		/**< LEUART RXDATAV interrupt enable **/
 	char						sigframe;		/**< LEUART SIGF character (8 bit only) **/
 	// RX
 	int							rxlen;
@@ -63,8 +63,8 @@ typedef struct
 	bool 						rx_dma;			/**< TODO: Unused. Enables RX DMA in EM2 **/
 	bool 						tx_dma;			/**< TODO: Unused. Enables TX DMA in EM2 **/
 	// Scheduler Event IDs
-	uint32_t					rx_done_evt;	/**< Scheduler ID for RX Done event **/
-	uint32_t					tx_done_evt;	/**< Scheduler ID for TX Done event **/
+	uint32_t *					rx_done_evt;	/**< Scheduler ID for RX Done event **/
+	uint32_t *					tx_done_evt;	/**< Scheduler ID for TX Done event **/
 } LEUART_OPEN_STRUCT;
 
 void leuart_open(LEUART_TypeDef *leuart, LEUART_OPEN_STRUCT * leuart_settings);

@@ -25,7 +25,8 @@ void si7021_i2c_open();
 void si7021_i2c_start();
 void si7021_lpm_enable(void);
 void si7021_lpm_disable(void);
-float si7021_temp_C();
+float si7021_temp_K();
 float si7021_temp_F();
+float si7021_temp_C();
 
 #endif /* SI7021_H */

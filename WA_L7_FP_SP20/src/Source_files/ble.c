@@ -1,3 +1,6 @@
+#define ifn(x) if(!(x))
+#define whilen(x) while(!(x))
+
 /**
  * @file ble.c
  * @author William Abrams
@@ -9,11 +12,16 @@
 #include "ble.h"
 #include "leuart.h"
 #include <string.h>
+#include <stdio.h>
 
 static BLE_CIRCULAR_BUF ble_cbuf;				/**< circular buffer struct for ble.c **/
 static CIRC_TEST_STRUCT test_struct;			/**< circular buffer test struct for the TDD routine **/
 static char ble_tx_string[BLE_STR_SIZE];		/**< ble string currently being transmitted by LEUART **/
-static char ble_rx_string[BLE_STR_SIZE];
+static char ble_rx_string[(BLE_STR_SIZE / 2)];
+
+static uint32_t ble_tx_done_evt;
+static uint32_t ble_rx_done_evt;
+
 /**
  * @brief
  * 	checks if the circular buffer ble_cbuf is empty
@@ -74,6 +82,9 @@ static inline void update_circ_readindex(BLE_CIRCULAR_BUF * index_struct, uint32
 **/
 void ble_open(uint32_t tx_event, uint32_t rx_event)
 {
+	ble_rx_done_evt = rx_event;
+	ble_tx_done_evt = tx_event;
+
 	LEUART_OPEN_STRUCT leuart_open_s;
 	// LEUART INIT STRUCT fields
 	leuart_open_s.baudrate = HM10_BAUDRATE;
@@ -95,16 +106,16 @@ void ble_open(uint32_t tx_event, uint32_t rx_event)
 	leuart_open_s.sfubrx = true;
 	leuart_open_s.startframe_en = true;
 	leuart_open_s.startframe = HM10_STARTF;
-	leuart_open_s.sigframe_en = true;
+	leuart_open_s.rxdatav_en = true;
 	leuart_open_s.sigframe = HM10_SIGF;
 	// LEUART RX STRING
-	leuart_open_s.rxlen = BLE_STR_SIZE;
+	leuart_open_s.rxlen = BLE_STR_SIZE / 2;
 	leuart_open_s.rxstring = ble_rx_string;
 	// LEUART DMA
 	leuart_open_s.tx_dma = LEUART_TX_DMA;
 	// LEUART SCHEDULED EVENTS
-	leuart_open_s.rx_done_evt = rx_event;
-	leuart_open_s.tx_done_evt = tx_event;
+	leuart_open_s.rx_done_evt = &ble_rx_done_evt;
+	leuart_open_s.tx_done_evt = &ble_tx_done_evt;
 	ble_circ_init();
 	leuart_open(HM10_LEUART0, &leuart_open_s);
 }
@@ -437,6 +448,160 @@ bool ble_circ_pop(bool test)
 		}
 	}
 	return true;
+}
+
+void ble_rx_test()
+{
+	//wait for idle
+	while(leuart_tx_busy(HM10_LEUART0));
+
+	int tp = 0; //tests passed
+
+	// TEST  1:
+	//	verify that receiving is enabled
+	ifn (HM10_LEUART0 -> STATUS & LEUART_STATUS_RXENS)
+		EFM_ASSERT(false);
+	tp++;
+
+	// TEST  2:
+	//	verify that interrupt is enabled for STARTF
+	ifn (HM10_LEUART0 -> IEN & LEUART_IEN_STARTF)
+		EFM_ASSERT(false);
+	tp++;
+
+	// TEST  3:
+	//	verify that interrupt is NOT enabled for SIGF
+	if (HM10_LEUART0 -> IEN & LEUART_IEN_SIGF)
+		EFM_ASSERT(false);
+	tp++;
+
+	// TEST  4:
+	//	verify that interrupt is enabled for RXDATAV
+	ifn (HM10_LEUART0 -> IEN & LEUART_IEN_RXDATAV)
+		EFM_ASSERT(false);
+	tp++;
+
+	// TEST  5:
+	//	verify that RXBLOCK is enabled
+	ifn (HM10_LEUART0 -> STATUS & LEUART_STATUS_RXBLOCK)
+		EFM_ASSERT(false);
+	tp++;
+
+	// TEST  6:
+	//	verify that SFUBRX is enabled
+	ifn (HM10_LEUART0 -> CTRL & LEUART_CTRL_SFUBRX)
+		EFM_ASSERT(false);
+	tp++;
+
+	// TEST  7:
+	// verify STARTF != SIGF
+	if (HM10_LEUART0 -> STARTFRAME == HM10_LEUART0 -> SIGFRAME)
+		EFM_ASSERT(false);
+	tp++;
+
+	//LOOPBK mode (links RX to TX)
+	HM10_LEUART0 -> CTRL |=  LEUART_CTRL_LOOPBK;
+	while (HM10_LEUART0 -> SYNCBUSY & LEUART_SYNCBUSY_CTRL);
+	//disable interrupts for now
+	__disable_irq();
+
+	// TEST  8
+	//	test character (blocked)
+	HM10_LEUART0 -> IFC = HM10_LEUART0 -> IF; //clear all interrupts
+	HM10_LEUART0 -> TXDATA = 'a';
+	whilen (HM10_LEUART0 -> IF & LEUART_IF_TXC);
+	if (HM10_LEUART0 -> IF & LEUART_IF_RXDATAV)
+		EFM_ASSERT(false);
+	tp++;
+
+	// TEST 9, 10:
+	//	test signal frame (blocked, but still appears)
+	HM10_LEUART0 -> IFC = HM10_LEUART0 -> IF; //clear any leftover interrupts from above
+	HM10_LEUART0 -> TXDATA = HM10_SIGF;
+	whilen (HM10_LEUART0 -> IF & (LEUART_IF_TXC | LEUART_IF_TXBL));
+	ifn (HM10_LEUART0 -> IF & LEUART_IF_SIGF)
+		EFM_ASSERT(false);
+	tp++;
+	if (HM10_LEUART0 -> IF & LEUART_IF_RXDATAV)
+		EFM_ASSERT(false);
+	tp++;
+
+	// TEST 11, 12, 13:
+	//	test start frame
+	HM10_LEUART0 -> IFC = HM10_LEUART0 -> IF;
+	HM10_LEUART0 -> TXDATA = HM10_STARTF;
+	whilen (HM10_LEUART0 -> IF & (LEUART_IF_TXC | LEUART_IF_TXBL));
+	ifn (HM10_LEUART0 -> IF & LEUART_IF_STARTF)
+		HM10_LEUART0 -> CTRL &= ~LEUART_CTRL_LOOPBK;
+	tp++;
+	if (HM10_LEUART0 -> STATUS & LEUART_STATUS_RXBLOCK)
+		EFM_ASSERT(false);
+	tp++;
+	ifn (HM10_LEUART0 -> IF & LEUART_IF_RXDATAV)
+		EFM_ASSERT(false);
+	tp++;
+
+	HM10_LEUART0 -> CMD |= LEUART_CMD_RXBLOCKEN | LEUART_CMD_CLEARRX;
+	HM10_LEUART0 -> IFC = HM10_LEUART0 -> IF;
+	while (HM10_LEUART0 -> SYNCBUSY & LEUART_SYNCBUSY_CMD);
+	uint32_t backup_leuart_ien_tx   = HM10_LEUART0 -> IEN & (LEUART_IEN_TXBL | LEUART_IEN_TXC);
+	uint32_t backup_ble_rx_done_evt = ble_rx_done_evt;
+	uint32_t backup_ble_tx_done_evt = ble_tx_done_evt;
+	ble_rx_done_evt = (ble_tx_done_evt = 0);
+
+	__enable_irq();
+	char testString[32];
+	// TEST 14:
+	//	test empty command (start, sig)
+	HM10_LEUART0 -> IEN &= ~(LEUART_IEN_TXBL | LEUART_IEN_TXC);
+	sprintf(testString, "<>");
+	leuart_start(HM10_LEUART0, testString, strlen(testString));
+	while(leuart_tx_busy(HM10_LEUART0));
+	if (strcmp(testString, ble_rx_string))
+		EFM_ASSERT(false);
+	tp++;
+
+	// TEST 15:
+	//	test command that fits in rxstring
+	HM10_LEUART0 -> IEN &= ~(LEUART_IEN_TXBL | LEUART_IEN_TXC);
+	sprintf(testString, "<tempQ>");
+	leuart_start(HM10_LEUART0, testString, strlen(testString));
+	while(leuart_tx_busy(HM10_LEUART0));
+	if (strcmp(testString, ble_rx_string))
+		EFM_ASSERT(false);
+	tp++;
+
+	// TEST 16:
+	//	test repeated start, full overwrite
+	HM10_LEUART0 -> IEN &= ~(LEUART_IEN_TXBL | LEUART_IEN_TXC);
+	sprintf(testString, "<tempR<tempQ>");
+	leuart_start(HM10_LEUART0, testString, strlen(testString));
+	sprintf(testString, "<tempQ>");
+	while(leuart_tx_busy(HM10_LEUART0));
+	if (strcmp(testString, ble_rx_string))
+		EFM_ASSERT(false);
+	tp++;
+
+	// TEST 17:
+	//	test repeated start, only partial overwrite
+	HM10_LEUART0 -> IEN &= ~(LEUART_IEN_TXBL | LEUART_IEN_TXC);
+	sprintf(testString, "<tempS<tempR<tempQ>");
+	leuart_start(HM10_LEUART0, testString, strlen(testString));
+	sprintf(testString, "<tempQ>");
+	while(leuart_tx_busy(HM10_LEUART0));
+	if (strcmp(testString, ble_rx_string))
+		EFM_ASSERT(false);
+	tp++;
+
+	// TEST PASSED:
+	__disable_irq();
+	HM10_LEUART0 -> IEN |= backup_leuart_ien_tx;
+	HM10_LEUART0 -> IFC = HM10_LEUART0 -> IF; //clear all pending interrupts
+	HM10_LEUART0 -> CTRL &= ~LEUART_CTRL_LOOPBK;
+	ble_rx_done_evt = backup_ble_rx_done_evt;
+	ble_tx_done_evt = backup_ble_tx_done_evt;
+	while (HM10_LEUART0 -> SYNCBUSY & LEUART_SYNCBUSY_CTRL);
+	__enable_irq();
 }
 
 char * ble_getCMD()

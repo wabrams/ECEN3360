@@ -67,6 +67,7 @@ bool ble_circ_pop(bool);
 void ble_open(uint32_t tx_event, uint32_t rx_event);
 void ble_write(char *string);
 bool ble_test(char *mod_name);
+void ble_rx_test();
 char * ble_getCMD();
 
 #endif

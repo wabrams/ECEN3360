@@ -86,20 +86,11 @@ void si7021_lpm_disable()
 	GPIO_PinModeSet(SI7021_SENSOR_EN_PORT, SI7021_SENSOR_EN_PIN, gpioModeDisabled, false);
 }
 
-/**
- * @brief
- *	Getter for the Si7021's temperature reading, in Celsius
- * @details
- *	converts the raw rx_data to Celsius
- * @returns
- *	temperature in Celsius, to the tenth of a degree
- **/
-float si7021_temp_C()
+float si7021_temp_K()
 {
-	float tempC = (175.72 * (float)rx_buffer / 65536) - 46.85;
-	return (float)((int)(tempC*10))/10;
+	float tempK = (175.72 * (float)rx_buffer / 65536) + 226.3;
+	return (float)((int)(tempK*10))/10;
 }
-
 /**
  * @brief
  *	Getter for the Si7021's temperature reading, in Fahrenheit
@@ -114,3 +105,16 @@ float si7021_temp_F()
 	return (float)((int)(tempF*10))/10;
 }
 
+/**
+ * @brief
+ *	Getter for the Si7021's temperature reading, in Celsius
+ * @details
+ *	converts the raw rx_data to Celsius
+ * @returns
+ *	temperature in Celsius, to the tenth of a degree
+ **/
+float si7021_temp_C()
+{
+	float tempC = (175.72 * (float)rx_buffer / 65536) - 46.85;
+	return (float)((int)(tempC*10))/10;
+}

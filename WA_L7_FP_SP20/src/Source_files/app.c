@@ -141,11 +141,14 @@ void scheduled_i2c_si7021_evt(void)
 
 	switch (temperatureMode)
 	{
-		case degreesC:
-			temp = si7021_temp_C();
+		case degreesK:
+			temp = si7021_temp_K();
 			break;
 		case degreesF:
 			temp = si7021_temp_F();
+			break;
+		case degreesC:
+			temp = si7021_temp_C();
 			break;
 		default:
 			EFM_ASSERT(false);
@@ -154,7 +157,7 @@ void scheduled_i2c_si7021_evt(void)
 
 	int leftDec = (int)temp;
 	int rightDec = ((int)(temp * 100.0)) % 100;	//TODO: fix ternary statement to support K and make sure temperature mode is valid
-	sprintf(tempToPrint, "%d.%d %c\n", leftDec, rightDec, (temperatureMode == degreesC)?'C':'F');
+	sprintf(tempToPrint, "%d.%d %c\n", leftDec, rightDec, (temperatureMode == degreesC)?'C':(temperatureMode == degreesF)?'F':(temperatureMode == degreesK)?'K':'?');
 	ble_write(tempToPrint);
 
 	if (si7021_temp_F() >= TEMP_THRESHOLD)
@@ -174,10 +177,12 @@ void scheduled_leuart_rx_done_evt(void)
 
 	char * rxstr = ble_getCMD();
 
-	if (!strcmp(rxstr, APP_CMD_TEMPC))
-		temperatureMode = degreesC;
+	if (!strcmp(rxstr, APP_CMD_TEMPK))
+		temperatureMode = degreesK;
 	else if (!strcmp(rxstr, APP_CMD_TEMPF))
 		temperatureMode = degreesF;
+	else if (!strcmp(rxstr, APP_CMD_TEMPC))
+		temperatureMode = degreesC;
 	else
 		ble_write("unknown cmd!\n");
 }
@@ -208,8 +213,9 @@ void scheduled_boot_up_evt(void)
 		for (int i = 0; i < 20000000; i++);
 	#endif
 	circular_buff_test();
-	ble_write("\nHello World\n");
-	ble_write("ADC Lab: ");
+	ble_rx_test();
+
+	ble_write("\nBLE TDD passed!\n");
 	ble_write("WAbrams\n");
 	letimer_start(LETIMER0, true);
 }
