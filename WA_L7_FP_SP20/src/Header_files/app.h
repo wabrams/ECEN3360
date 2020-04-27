@@ -32,10 +32,13 @@
 		#define LEUART_TX_DONE_EVT		0x00000020 /**< Scheduler Event ID for LEUART0_TX_DONE_EVT **/
 		#define BOOT_UP_EVT				0x80000000 /**< Scheduler Event ID for BOOT_UP_EVT (MAX)   **/
 
-		#define APP_CMD_TEMPK "<tempK>"
-		#define APP_CMD_TEMPF "<tempF>"
-		#define APP_CMD_TEMPC "<tempC>"
-
+		#define APP_CMD_TEMPK "<tempK>"		/**< BLE RX CMD for temperature mode Kelvin     **/
+		#define APP_CMD_TEMPF "<tempF>"		/**< BLE RX CMD for temperature mode Fahrenheit **/
+		#define APP_CMD_TEMPC "<tempC>"		/**< BLE RX CMD for temperature mode Celsius    **/
+	/**
+	 * @brief
+	 * TODO: left off here I2C State Machine Enumeration
+	 **/
 	typedef enum
 	{
 		degreesC,

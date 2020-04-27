@@ -21,11 +21,14 @@ typedef enum
 	LEUART_STATE_TX_TRANSMIT,		/**< transmit state **/
 	LEUART_STATE_TX_DONE,			/**< completed state **/
 } leuart_txstate_t;
-
+/**
+ * @brief
+ * LEUART RX State Machine Enumeration
+ **/
 typedef enum
 {
-	LEUART_STATE_RX_IDLE,
-	LEUART_STATE_RX_RECEIVE,
+	LEUART_STATE_RX_IDLE,			/**<  **/
+	LEUART_STATE_RX_RECEIVE,		/**<  **/
 } leuart_rxstate_t;
 
 /**
@@ -57,8 +60,8 @@ typedef struct
 	bool						rxdatav_en;		/**< LEUART RXDATAV interrupt enable **/
 	char						sigframe;		/**< LEUART SIGF character (8 bit only) **/
 	// RX
-	int							rxlen;
-	char *						rxstring;
+	int							rxlen;			/**< LEUART RXSTRING length **/
+	char *						rxstring;		/**< LEUART RXSTRING pointer **/
 	// DMA
 	bool 						rx_dma;			/**< TODO: Unused. Enables RX DMA in EM2 **/
 	bool 						tx_dma;			/**< TODO: Unused. Enables TX DMA in EM2 **/
@@ -71,6 +74,7 @@ void leuart_open(LEUART_TypeDef *leuart, LEUART_OPEN_STRUCT * leuart_settings);
 void LEUART0_IRQHandler(void);
 void leuart_start(LEUART_TypeDef *leuart, char *string, uint32_t string_len);
 bool leuart_tx_busy(LEUART_TypeDef *leuart);
+bool leuart_rx_busy();
 
 uint32_t leuart_status(LEUART_TypeDef *leuart);
 void leuart_cmd_write(LEUART_TypeDef *leuart, uint32_t cmd_update);

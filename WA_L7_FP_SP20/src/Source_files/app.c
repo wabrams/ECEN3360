@@ -17,7 +17,7 @@
 #include <string.h>
 #include <stdio.h>
 
-temp_mode_t temperatureMode = degreesC;
+temp_mode_t temperatureMode = degreesC;	/**< temperature mode select **/
 
 /**
  * @brief
@@ -156,7 +156,7 @@ void scheduled_i2c_si7021_evt(void)
 	}
 
 	int leftDec = (int)temp;
-	int rightDec = ((int)(temp * 100.0)) % 100;	//TODO: fix ternary statement to support K and make sure temperature mode is valid
+	int rightDec = ((int)(temp * 100.0)) % 100;
 	sprintf(tempToPrint, "%d.%d %c\n", leftDec, rightDec, (temperatureMode == degreesC)?'C':(temperatureMode == degreesF)?'F':(temperatureMode == degreesK)?'K':'?');
 	ble_write(tempToPrint);
 

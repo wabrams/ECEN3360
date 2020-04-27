@@ -85,7 +85,14 @@ void si7021_lpm_disable()
 	// Turn Off Power
 	GPIO_PinModeSet(SI7021_SENSOR_EN_PORT, SI7021_SENSOR_EN_PIN, gpioModeDisabled, false);
 }
-
+/**
+ * @brief
+ *	Getter for the Si7021's temperature reading, in Kelvin
+ * @details
+ *	converts the raw rx_data to Kelvin
+ * @returns
+ *	temperature in Kelvin, to the tenth of a degree
+ **/
 float si7021_temp_K()
 {
 	float tempK = (175.72 * (float)rx_buffer / 65536) + 226.3;

@@ -12,19 +12,19 @@
 #include "leuart.h"
 #include "scheduler.h"
 
-static uint32_t * rx_done_evt;	/**< Scheduler event ID for RX Done event **/
-static uint32_t	* tx_done_evt;	/**< Scheduler event ID for TX Done event **/
+static uint32_t * rx_done_evt;							/**< Scheduler event ID for RX Done event **/
+static uint32_t	* tx_done_evt;							/**< Scheduler event ID for TX Done event **/
 
 static leuart_txstate_t txstate = LEUART_STATE_TX_IDLE; /**< State Machine state variable for transmitting **/
-static volatile bool leuart0_txbusy = false;						/**< Status boolean, acts as weak mutex **/
+static volatile bool leuart0_txbusy = false;			/**< Status boolean, acts as weak mutex **/
 static char * txstring;									/**< Pointer, to next char to be transmitted **/
 static uint32_t txcnt = 0;								/**< Counter variable, of characters left to transmit **/
 
 
-static leuart_rxstate_t rxstate = LEUART_STATE_RX_IDLE;
-static char * rxstring;
-static uint32_t rxlen;
-static uint32_t rxcnt = 0;
+static leuart_rxstate_t rxstate = LEUART_STATE_RX_IDLE; /**< State Machine state variable for receiving **/
+static char * rxstring;									/**< Receiving String, where we write RXDATA to **/
+static uint32_t rxlen;									/**< Counter helper, length of rxstring **/
+static uint32_t rxcnt = 0;								/**< Counter variable, of characters received so far **/
 
 
 static bool leuart_tx_dma = false;						/**< TODO: Unused, for future implementation using LDMA **/
@@ -136,7 +136,7 @@ void LEUART0_IRQHandler(void)
 	__disable_irq();
 
 	uint32_t iflags = (LEUART0 -> IFC = LEUART0 -> IF) & LEUART0 -> IEN;
-	//TODO: finish these
+
 	if (iflags & LEUART_IF_STARTF)
 	{
 		switch (rxstate)
@@ -225,9 +225,10 @@ void LEUART0_IRQHandler(void)
 		{
 			case LEUART_STATE_TX_DONE:
 				txstate = LEUART_STATE_TX_IDLE;
-				sleep_unblock_mode(LEUART_RX_EM_BLOCK);
+				LEUART0 -> IEN &= ~LEUART_IEN_TXC;
 				leuart0_txbusy = false;
 				add_scheduled_event(*tx_done_evt);
+				sleep_unblock_mode(LEUART_TX_EM_BLOCK);
 				break;
 			case LEUART_STATE_TX_IDLE:
 			case LEUART_STATE_TX_TRANSMIT:
@@ -285,8 +286,14 @@ bool leuart_tx_busy(LEUART_TypeDef * leuart)
 		return leuart0_txbusy;
 	return true;
 }
-
-bool leaurt_rx_busy()
+/**
+ * @brief
+ *	Simple mutex to check if LEUART peripheral is busy in RX operation
+ * @returns
+ * 	Returns true if RX operation already in progress
+ * 	Returns false if RX is idle (not in use)
+ **/
+bool leuart_rx_busy()
 {
 	return !(rxstate == LEUART_STATE_RX_IDLE);
 }

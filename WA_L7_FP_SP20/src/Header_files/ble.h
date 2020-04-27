@@ -54,8 +54,8 @@ bool ble_circ_pop(bool);
 #define HM10_STOPBITS		leuartStopbits1		/**< BLE stopbits to look for **/
 
 //command would look like: <tempC> or <tempF>
-#define HM10_STARTF		'<'
-#define HM10_SIGF		'>'
+#define HM10_STARTF		'<'		/**< BLE RX CMD STARTF **/
+#define HM10_SIGF		'>'		/**< BLE RX CMD SIGF **/
 
 #define LEUART_TX_DMA		true				/**< TODO: Unused, for future implementation of LDMA **/
 
