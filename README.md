@@ -33,15 +33,46 @@ Normally, x = 0, but occasionally corrections were made after labs were submitte
 
 ### Lab 1 - Blinky
 
-TODO: explanation of Lab 1
+Function: simple LED blink on/off
+
+This lab is a simple way to gain familiarity with the IDE and devkit. 
+It introduces the basic structure of the project.
 
 ### Lab 2 - PWM
 
-TODO: explanation of Lab 2
+Function: simple PWM heartbeat / LED blink
+
+This lab establishes a heartbeat we can use throughout the system.
 
 ### Lab 3 - EM
 
-TODO: explanation of Lab 3
+Function: cycle through energy modes (power conservation)
+
+This lab establishes the sleep modes and blocks, to let us sit in the lowest possible energy mode.
+
+### Lab 4 - I2C
+
+Function: communicate with Si7021 temperature sensor over I2C
+
+This lab enables basic data readings, over I2C.
+
+### Lab 5 - LEUART
+
+Function: communicate temperature readings to bluetooth device.
+
+This lab enables communication with the HM10 bluetooth module.
+
+### Lab 6 - CB
+
+Function: allow back-to-back writes without string errors.
+
+This lab introduces the circular buffer data structure, to buffer bluetooth writes.
+
+### Lab 7 - FP
+
+Function: allow user interaction.
+
+This lab finishes setting up LEUART RX capabilities, allowing us to receive commands from the bluetooth module.
 
 ## Authors
 
