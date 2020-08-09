@@ -500,57 +500,33 @@ void ble_rx_test()
 	//LOOPBK mode (links RX to TX)
 	HM10_LEUART0 -> CTRL |=  LEUART_CTRL_LOOPBK;
 	while (HM10_LEUART0 -> SYNCBUSY & LEUART_SYNCBUSY_CTRL);
-	__disable_irq();
-	//CLEAR IEN REGISTER
-//	uint32_t backup_ien = HM10_LEUART0 -> IEN;
-//	HM10_LEUART0 -> IEN = 0;
 
-	// TEST  8
-	//	test character (blocked)
-	HM10_LEUART0 -> IFC = HM10_LEUART0 -> IF; //clear all interrupts
-	HM10_LEUART0 -> TXDATA = 'a';
-	whilen (HM10_LEUART0 -> IF & LEUART_IF_TXC);
-	if (HM10_LEUART0 -> IF & LEUART_IF_RXDATAV)
-		EFM_ASSERT(false);
-
-	// TEST 9, 10:
-	//	test signal frame (blocked, but still appears)
-	HM10_LEUART0 -> IFC = HM10_LEUART0 -> IF; //clear any leftover interrupts from above
-	HM10_LEUART0 -> TXDATA = HM10_SIGF;
-	whilen (HM10_LEUART0 -> IF & (LEUART_IF_TXC | LEUART_IF_TXBL));
-	// should still get signal frame interrupt
-	ifn (HM10_LEUART0 -> IF & LEUART_IF_SIGF)
-		EFM_ASSERT(false);
-	// should not get rxdatav interrupt (rxblocken)
-	if (HM10_LEUART0 -> IF & LEUART_IF_RXDATAV)
-		EFM_ASSERT(false);
-
-
-	// TEST 11, 12, 13:
-	//	test start frame
-	HM10_LEUART0 -> IFC = HM10_LEUART0 -> IF;
-	HM10_LEUART0 -> TXDATA = HM10_STARTF;
-	whilen (HM10_LEUART0 -> IF & (LEUART_IF_TXC | LEUART_IF_TXBL));
-	// should get start frame interrupt
-	ifn (HM10_LEUART0 -> IF & LEUART_IF_STARTF)
-		HM10_LEUART0 -> CTRL &= ~LEUART_CTRL_LOOPBK;
-	// rxblock should be cleared
-	if (HM10_LEUART0 -> STATUS & LEUART_STATUS_RXBLOCK)
-		EFM_ASSERT(false);
-	// should get rxdatav interrupt
-	ifn (HM10_LEUART0 -> IF & LEUART_IF_RXDATAV)
-		EFM_ASSERT(false);
-
-	HM10_LEUART0 -> CMD |= LEUART_CMD_RXBLOCKEN | LEUART_CMD_CLEARRX;
-	HM10_LEUART0 -> IFC = HM10_LEUART0 -> IF;
 	while (HM10_LEUART0 -> SYNCBUSY & LEUART_SYNCBUSY_CMD);
 	uint32_t backup_ble_rx_done_evt = ble_rx_done_evt;
 	uint32_t backup_ble_tx_done_evt = ble_tx_done_evt;
 	ble_rx_done_evt = (ble_tx_done_evt = 0);
 
+	HM10_LEUART0 -> IFC = HM10_LEUART0 -> IF;
 	__enable_irq();
 	char testString[32];
-	// TEST 14:
+
+	// TEST  8
+	//	test character writes (blocked)
+	sprintf(testString, "abcde");
+	leuart_start(HM10_LEUART0, testString, strlen(testString));
+	while(leuart_tx_busy(HM10_LEUART0) || leuart_rx_busy());
+	if (strcmp("", ble_rx_string))
+		EFM_ASSERT(false);
+
+	// TEST  9
+	//	test character writes with sigf (blocked)
+	sprintf(testString, "abcde>");
+	leuart_start(HM10_LEUART0, testString, strlen(testString));
+	while(leuart_tx_busy(HM10_LEUART0) || leuart_rx_busy());
+	if (strcmp("", ble_rx_string))
+		EFM_ASSERT(false);
+
+	// TEST 10:
 	//	test empty command (start, sig)
 	sprintf(testString, "<>");
 	leuart_start(HM10_LEUART0, testString, strlen(testString));
@@ -558,7 +534,7 @@ void ble_rx_test()
 	if (strcmp(testString, ble_rx_string))
 		EFM_ASSERT(false);
 
-	// TEST 15:
+	// TEST 11:
 	//	test command that fits in rxstring
 	sprintf(testString, "<tempQ>");
 	leuart_start(HM10_LEUART0, testString, strlen(testString));
@@ -566,7 +542,7 @@ void ble_rx_test()
 	if (strcmp(testString, ble_rx_string))
 		EFM_ASSERT(false);
 
-	// TEST 16:
+	// TEST 12:
 	//	test repeated start, full overwrite
 	sprintf(testString, "<tempR<tempQ>");
 	leuart_start(HM10_LEUART0, testString, strlen(testString));
@@ -575,7 +551,7 @@ void ble_rx_test()
 	if (strcmp(testString, ble_rx_string))
 		EFM_ASSERT(false);
 
-	// TEST 17:
+	// TEST 13:
 	//	test repeated start, only partial overwrite
 	sprintf(testString, "<tempS<tempR<tempQ>");
 	leuart_start(HM10_LEUART0, testString, strlen(testString));
